@@ -4,20 +4,20 @@ CREATE TABLE merchant
     name       VARCHAR(50) NOT NULL,
     apiKey     VARCHAR(2048),
     secret_key VARCHAR(2048),
-    createdAt  DATE,
-    updatedAt  DATE,
+    created_at DATE,
+    updated_at DATE,
     status     VARCHAR(50)
 );
 
 CREATE TABLE customer
 (
-    id        SERIAL PRIMARY KEY,
-    firstname VARCHAR(50),
-    lastname  VARCHAR(50),
-    createdAt DATE,
-    updatedAt DATE,
-    status    VARCHAR(50),
-    country   VARCHAR(50)
+    id         SERIAL PRIMARY KEY,
+    firstname  VARCHAR(50),
+    lastname   VARCHAR(50),
+    created_at DATE,
+    updated_at DATE,
+    status     VARCHAR(50),
+    country    VARCHAR(50)
 );
 
 CREATE TABLE account
@@ -27,9 +27,9 @@ CREATE TABLE account
     merchant_id INTEGER,
     owner_type  VARCHAR(50) CHECK (owner_type IN ('customer', 'merchant')),
     currency    VARCHAR(50),
-    balance     BIGINT,
-    createdAt   DATE,
-    updatedAt   DATE,
+    balance     DECIMAL(18, 2),
+    created_at  DATE,
+    updated_at  DATE,
     status      VARCHAR(50),
     CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customer (id),
     CONSTRAINT fk_merchant FOREIGN KEY (merchant_id) REFERENCES merchant (id),
@@ -39,50 +39,49 @@ CREATE TABLE account
         )
 );
 
+
 CREATE TABLE card
 (
-    id         SERIAL PRIMARY KEY,
-    accountId  INTEGER,
-    cardNumber INTEGER,
-    expDate    DATE,
-    cvv        INTEGER,
-    createdAt  DATE,
-    updatedAt  DATE,
-    status     VARCHAR(50),
-    CONSTRAINT fk_account FOREIGN KEY (accountId) REFERENCES account (id)
+    id          SERIAL PRIMARY KEY,
+    account_id  INTEGER,
+    card_number BIGINT,
+    exp_date    DATE,
+    cvv         VARCHAR(4),
+    created_at  DATE,
+    updated_at  DATE,
+    status      VARCHAR(50),
+    CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES account (id)
 );
 
 CREATE TABLE transaction
 (
     id              SERIAL PRIMARY KEY,
-    cardId          INTEGER,
-    accountId       INTEGER,
-    amount          INTEGER,
+    card_id         INTEGER,
+    account_id      INTEGER,
+    amount          DECIMAL(18, 2),
     currency        VARCHAR(50),
     status          VARCHAR(50),
     message         VARCHAR(2048),
-    notificationUrl VARCHAR(2048),
-    createdAt       DATE,
-    updatedAt       DATE,
+    notification_url VARCHAR(2048),
+    created_at      DATE,
+    updated_at      DATE,
     language        VARCHAR(50),
-    operationType   VARCHAR(50),
-    CONSTRAINT fk_card FOREIGN KEY (cardId) REFERENCES card (id),
-    CONSTRAINT fk_account FOREIGN KEY (accountId) REFERENCES account (id)
+    operation_type  VARCHAR(50),
+    CONSTRAINT fk_card FOREIGN KEY (card_id) REFERENCES card (id),
+    CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES account (id)
 );
 
 CREATE TABLE webhook
 (
     id                SERIAL PRIMARY KEY,
-    transactionID     INTEGER,
-    notificationUrl   VARCHAR(50),
+    transaction_id    INTEGER,
+    notification_url  VARCHAR(2048),
     status            VARCHAR(50),
     attempts          INTEGER,
-    last_attempt_time TIME,
-    createdAt         DATE,
-    updatedAt         DATE,
+    last_attempt_time TIMESTAMP,
+    created_at        DATE,
+    updated_at        DATE,
     response_status   VARCHAR(50),
     response_body     VARCHAR(50),
-    CONSTRAINT fk_transaction FOREIGN KEY (transactionID) REFERENCES transaction (id)
-)
-
-
+    CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transaction (id)
+);
