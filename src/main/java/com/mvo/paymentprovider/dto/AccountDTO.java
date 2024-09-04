@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -18,8 +19,8 @@ public class AccountDTO {
     private String ownerType;
     private String currency;
     private BigDecimal balance;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Status status;
     private Long customerId;
     private Long merchantId;

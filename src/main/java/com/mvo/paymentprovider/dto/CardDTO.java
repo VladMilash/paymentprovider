@@ -6,6 +6,7 @@ import com.mvo.paymentprovider.entity.Status;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -16,7 +17,7 @@ public class CardDTO {
     private Long curdNumber;
     private String expDate;
     private String cvv;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Status status;
 }

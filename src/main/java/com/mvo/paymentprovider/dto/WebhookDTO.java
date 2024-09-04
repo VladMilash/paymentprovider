@@ -19,7 +19,7 @@ public class WebhookDTO {
     private LocalDateTime lastAttemptTime;
     private String responseStatus;
     private String responseBody;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Status status;
 }

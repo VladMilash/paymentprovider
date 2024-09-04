@@ -38,10 +38,10 @@ public class Webhook {
     private String responseBody;
 
     @Column("createdAt")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Column("updatedAt")
-    private LocalDate updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column("status")
     private Status status;

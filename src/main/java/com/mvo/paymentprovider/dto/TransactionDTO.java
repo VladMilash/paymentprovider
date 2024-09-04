@@ -2,11 +2,12 @@ package com.mvo.paymentprovider.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import com.mvo.paymentprovider.entity.Status;
+import com.mvo.paymentprovider.entity.TransactionStatus;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -21,8 +22,8 @@ public class TransactionDTO {
     private String notificationUrl;
     private String language;
     private String operationType;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
-    private Status status;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private TransactionStatus transactionStatus;
 
 }

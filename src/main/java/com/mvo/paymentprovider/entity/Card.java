@@ -10,6 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder(toBuilder = true)
@@ -33,10 +34,10 @@ public class Card {
     private String cvv;
 
     @Column("createdAt")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 
     @Column("updatedAt")
-    private LocalDate updatedAt;
+    private LocalDateTime updatedAt;
 
     @Column("status")
     private Status status;

@@ -7,6 +7,7 @@ import lombok.Data;
 
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
@@ -15,8 +16,8 @@ public class MerchantDTO {
     private String name;
     private String apikey;
     private String secretKey;
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private Status status;
 
 }
