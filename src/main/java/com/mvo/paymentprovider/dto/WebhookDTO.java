@@ -7,13 +7,14 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class WebhookDTO {
 
-    private Long id;
-    private Long transactionId;
+    private UUID id;
+    private UUID transactionId;
     private String notificationUrl;
     private Integer attempts;
     private LocalDateTime lastAttemptTime;

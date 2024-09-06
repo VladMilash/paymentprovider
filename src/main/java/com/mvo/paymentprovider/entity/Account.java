@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -20,7 +21,7 @@ import java.util.List;
 @Table("account")
 public class Account {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("ownerType")
     private String ownerType;
@@ -41,10 +42,10 @@ public class Account {
     private Status status;
 
     @Column("customer_id")
-    private Long customerId;
+    private UUID customerId;
 
     @Column("merchant_id")
-    private Long merchantId;
+    private UUID merchantId;
 
     private List<Card> cards;
 

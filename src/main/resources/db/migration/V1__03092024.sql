@@ -1,6 +1,6 @@
 CREATE TABLE merchant
 (
-    id        SERIAL PRIMARY KEY,
+    id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name      VARCHAR(50) NOT NULL,
     apiKey    VARCHAR(2048),
     secretKey VARCHAR(2048),
@@ -11,7 +11,7 @@ CREATE TABLE merchant
 
 CREATE TABLE customer
 (
-    id        SERIAL PRIMARY KEY,
+    id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     firstname VARCHAR(50),
     lastname  VARCHAR(50),
     createdAt DATE,
@@ -22,9 +22,9 @@ CREATE TABLE customer
 
 CREATE TABLE account
 (
-    id          SERIAL PRIMARY KEY,
-    customer_id INTEGER,
-    merchant_id INTEGER,
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    customer_id UUID,
+    merchant_id UUID,
     ownerType   VARCHAR(50) CHECK (ownerType IN ('customer', 'merchant')),
     currency    VARCHAR(50),
     balance     DECIMAL(18, 2),
@@ -39,11 +39,10 @@ CREATE TABLE account
         )
 );
 
-
 CREATE TABLE card
 (
-    id          SERIAL PRIMARY KEY,
-    account_id  INTEGER,
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_id  UUID,
     card_number BIGINT,
     exp_date    VARCHAR(50),
     cvv         VARCHAR(4),
@@ -55,9 +54,9 @@ CREATE TABLE card
 
 CREATE TABLE transaction
 (
-    id               SERIAL PRIMARY KEY,
-    card_id          INTEGER,
-    account_id       INTEGER,
+    id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    card_id          UUID,
+    account_id       UUID,
     amount           DECIMAL(18, 2),
     currency         VARCHAR(50),
     status           VARCHAR(50),
@@ -73,8 +72,8 @@ CREATE TABLE transaction
 
 CREATE TABLE webhook
 (
-    id                SERIAL PRIMARY KEY,
-    transaction_id    INTEGER,
+    id                UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    transaction_id    UUID,
     notification_url  VARCHAR(2048),
     status            VARCHAR(50),
     attempts          INTEGER,

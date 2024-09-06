@@ -8,11 +8,12 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class MerchantDTO {
-    private Long id;
+    private UUID id;
     private String name;
     private String apikey;
     private String secretKey;

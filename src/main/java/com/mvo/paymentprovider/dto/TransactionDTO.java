@@ -8,14 +8,15 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TransactionDTO {
 
-    private Long id;
-    private Long cardId;
-    private Long accountId;
+    private UUID id;
+    private UUID cardId;
+    private UUID accountId;
     private BigDecimal amount;
     private String currency;
     private String message;

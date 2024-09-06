@@ -7,14 +7,15 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CardDTO {
 
-    private Long id;
-    private Long accountId;
-    private Long curdNumber;
+    private UUID id;
+    private UUID accountId;
+    private UUID curdNumber;
     private String expDate;
     private String cvv;
     private LocalDateTime createdAt;

@@ -9,6 +9,7 @@ import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -17,10 +18,10 @@ import java.time.LocalDateTime;
 @Table("webhook")
 public class Webhook {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("transaction_id")
-    private Long transactionId;
+    private UUID transactionId;
 
     @Column("notification_url")
     private String notificationUrl;

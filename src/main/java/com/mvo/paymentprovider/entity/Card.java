@@ -8,9 +8,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
 
-import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -19,10 +18,10 @@ import java.time.LocalDateTime;
 @Table("card")
 public class Card {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("account_id")
-    private Long accountId;
+    private UUID accountId;
 
     @Column("card_number")
     private Long curdNumber;

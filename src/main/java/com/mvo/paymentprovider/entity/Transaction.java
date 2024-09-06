@@ -11,6 +11,7 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -19,13 +20,13 @@ import java.time.LocalDateTime;
 @Table("transaction")
 public class Transaction {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("card_id")
-    private Long cardId;
+    private UUID cardId;
 
     @Column("account_id")
-    private Long accountId;
+    private UUID accountId;
 
     @Column("amount")
     private BigDecimal amount;

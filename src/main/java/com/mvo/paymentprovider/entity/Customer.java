@@ -10,6 +10,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @Table("customer")
 public class Customer {
     @Id
-    private Long id;
+    private UUID id;
 
     @Column("firstname")
     private String firstname;

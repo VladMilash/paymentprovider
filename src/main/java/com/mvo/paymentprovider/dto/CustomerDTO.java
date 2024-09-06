@@ -7,11 +7,12 @@ import lombok.Data;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class CustomerDTO {
-    private Long id;
+    private UUID id;
     private String firstname;
     private String lastname;
     private LocalDateTime createdAt;
