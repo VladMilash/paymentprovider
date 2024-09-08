@@ -7,7 +7,7 @@ import com.mvo.paymentprovider.entity.Status;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,8 +19,8 @@ public class AccountDTO {
     private String ownerType;
     private String currency;
     private BigDecimal balance;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
     private Status status;
     private UUID customerId;
     private UUID merchantId;

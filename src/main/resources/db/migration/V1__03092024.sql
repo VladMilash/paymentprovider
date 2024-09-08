@@ -66,6 +66,7 @@ CREATE TABLE transaction
     updatedAt        DATE,
     language         VARCHAR(50),
     operation_type   VARCHAR(50),
+    paymentMethod    VARCHAR(50),
     CONSTRAINT fk_card FOREIGN KEY (card_id) REFERENCES card (id),
     CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES account (id)
 );

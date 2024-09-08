@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.mvo.paymentprovider.entity.Status;
 import lombok.Data;
-
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -17,8 +14,8 @@ public class MerchantDTO {
     private String name;
     private String apikey;
     private String secretKey;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
     private Status status;
 
 }

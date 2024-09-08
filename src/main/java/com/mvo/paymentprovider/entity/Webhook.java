@@ -45,5 +45,5 @@ public class Webhook {
     private LocalDateTime updatedAt;
 
     @Column("status")
-    private Status status;
+    private String status;
 }

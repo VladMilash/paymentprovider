@@ -1,26 +1,27 @@
 package com.mvo.paymentprovider.service;
 
 import com.mvo.paymentprovider.entity.Transaction;
+import com.mvo.paymentprovider.entity.TransactionStatus;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.UUID;
 
 public interface TransactionService {
-    Flux<Transaction> getTransactionsByDay(Long merchantId, LocalDateTime date);
+    Mono<Transaction> createTransaction(String paymentMethod, BigDecimal amount, String currency,
+                                        Long cardNumber, String expDate, String cvv,
+                                        String language, String notificationUrl, String firstName,
+                                        String lastName, String country, UUID merchantId);
 
-    Flux<Transaction> getTransactionsByPeriod(Long merchantId, LocalDateTime startDate, LocalDateTime finishDate);
+    Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus);
 
-    Mono<Transaction> saveTransaction(Transaction transaction);
+    Flux<Transaction> getTransactionsByDay(LocalDate date);
 
-    Mono<Transaction> updateTransactionStatus(Transaction transaction);
+    Flux<Transaction> getTransactionsByPeriod(LocalDate startDate, LocalDate endDate);
 
-    Mono<Transaction> getTransactionById(Long transactionId);
+    Mono<Transaction> getTransactionDetails(UUID transactionId);
 
-    Mono<Transaction> savePayout(Transaction transaction);
-
-    Mono<Transaction> getPayoutById(Long transactionId);
-
-    Flux<Transaction> getPayoutsByDay(Long merchantId, LocalDateTime date);
 
 }

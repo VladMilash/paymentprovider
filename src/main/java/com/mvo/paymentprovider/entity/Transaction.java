@@ -55,4 +55,7 @@ public class Transaction {
     @Column("status")
     private TransactionStatus transactionStatus;
 
+    @Column("paymentMethod")
+    private String paymentMethod;
+
 }

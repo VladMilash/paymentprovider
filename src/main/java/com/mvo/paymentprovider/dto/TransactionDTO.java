@@ -7,7 +7,6 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -23,8 +22,9 @@ public class TransactionDTO {
     private String notificationUrl;
     private String language;
     private String operationType;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
     private TransactionStatus transactionStatus;
+    private String paymentMethod;
 
 }
