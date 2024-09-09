@@ -15,7 +15,7 @@ public class CardDTO {
 
     private UUID id;
     private UUID accountId;
-    private UUID curdNumber;
+    private UUID cardNumber;
     private String expDate;
     private String cvv;
     private LocalDate createdAt;

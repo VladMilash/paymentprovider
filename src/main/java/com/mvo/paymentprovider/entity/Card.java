@@ -25,7 +25,7 @@ public class Card {
     private UUID accountId;
 
     @Column("card_number")
-    private Long curdNumber;
+    private Long cardNumber;
 
     @Column("exp_date")
     private String expDate;
