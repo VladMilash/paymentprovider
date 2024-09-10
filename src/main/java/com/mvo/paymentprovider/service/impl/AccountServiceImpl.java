@@ -8,6 +8,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Log4j2
@@ -35,5 +36,24 @@ public class AccountServiceImpl implements AccountService {
         return accountRepository.findByCustomerIdAndCurrency(customerId, currency)
                 .doOnSuccess(account -> log.info("Account with customerId {} and currency {} has been finding successfully", customerId, currency))
                 .doOnError(error -> log.error("Failed to find account with customerId {} and currency {}", customerId, currency));
+    }
+
+    @Override
+    public Mono<Account> update(Account account) {
+        return accountRepository.findById(account.getId())
+                .map(account1 -> {
+                    account1.setStatus(account.getStatus());
+                    account1.setUpdatedAt(LocalDateTime.now());
+                    account1.setOwnerType(account.getOwnerType());
+                    account1.setCurrency(account.getCurrency());
+                    account1.setCards(account.getCards());
+                    account1.setBalance(account.getBalance());
+                    account1.setMerchantId(account.getMerchantId());
+                    account1.setCustomerId(account.getCustomerId());
+                    return account1;
+                })
+                .flatMap(accountRepository::save)
+                .doOnSuccess(event -> log.info("Account with id {} has been updated successfully", account.getId()))
+                .doOnError(error -> log.error("Failed to update account with id {}", account.getId(), error));
     }
 }

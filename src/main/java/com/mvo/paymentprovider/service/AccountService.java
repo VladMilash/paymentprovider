@@ -12,4 +12,6 @@ public interface AccountService {
 
     Mono<Account> findByCustomerIdAndCurrency(UUID customerId, String currency);
 
+    Mono<Account> update(Account account);
+
 }

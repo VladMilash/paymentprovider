@@ -42,12 +42,41 @@ public class TransactionServiceImpl implements TransactionService {
                                                     .switchIfEmpty(customerService.createCustomer(createCustomer(firstName,lastName,country)))
                                                     .flatMap(customer ->
                                                             accountService.findByCustomerIdAndCurrency(customer.getId(), currency)
-                                                                    .switchIfEmpty(accountService.createAccount())
+                                                                    .switchIfEmpty(accountService.createAccount(createAccount(customer,currency)))
+                                                                    .flatMap(customerAccount ->
+                                                                            cardService.findByCardNumber(cardNumber)
+                                                                                    .switchIfEmpty(cardService.createCard(createCard(customerAccount,cardNumber,expDate,cvv)))
+                                                                                    .flatMap(card -> creditCustomerAccount(customerAccount ,amount)
+                                                                                                    .flatMap(updatedCustomerAccount ->
+
+                                                                                                            )
+
+
+                                                                                            )
+                                                                            )
                                                             )
 
 
                                     )
                 })
+    }
+
+
+    private Mono<Account> creditCustomerAccount(Account customerAccount, BigDecimal amount) {
+        customerAccount.setBalance(customerAccount.getBalance().add(amount));
+        return accountService.update(customerAccount);
+    }
+
+    private Card createCard(Account account, Long cardNumber, String expDate, String cvv) {
+        Card card = new Card();
+        card.setAccountId(account.getId());
+        card.setCardNumber(cardNumber);
+        card.setExpDate(expDate);
+        card.setCvv(cvv);
+        card.setCreatedAt(LocalDateTime.now());
+        card.setUpdatedAt(LocalDateTime.now());
+        card.setStatus(Status.ACTIVE);
+        return card;
     }
 
     private Customer createCustomer(String firstname, String lastname, String country) {
@@ -66,7 +95,10 @@ public class TransactionServiceImpl implements TransactionService {
         account.setOwnerType("customer");
         account.setCurrency(currency);
         account.setCustomerId(customer.getId());
-        account.setCards();
+        account.setCreatedAt(LocalDateTime.now());
+        account.setUpdatedAt(LocalDateTime.now());
+        account.setStatus(Status.ACTIVE);
+        return account;
     }
 
     @Override
