@@ -2,8 +2,10 @@ package com.mvo.paymentprovider.dto;
 
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.mvo.paymentprovider.entity.OperationType;
 import com.mvo.paymentprovider.entity.TransactionStatus;
 import lombok.Data;
+import org.springframework.data.relational.core.mapping.Column;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -14,14 +16,14 @@ import java.util.UUID;
 public class TransactionDTO {
 
     private UUID id;
-    private UUID cardId;
-    private UUID accountId;
+    private UUID customerAccountId;
+    private UUID merchantAccountId;
     private BigDecimal amount;
     private String currency;
     private String message;
     private String notificationUrl;
     private String language;
-    private String operationType;
+    private OperationType operationType;
     private LocalDate createdAt;
     private LocalDate updatedAt;
     private TransactionStatus transactionStatus;

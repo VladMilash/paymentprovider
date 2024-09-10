@@ -22,11 +22,11 @@ public class Transaction {
     @Id
     private UUID id;
 
-    @Column("card_id")
-    private UUID cardId;
+    @Column("customer_account_id")
+    private UUID customerAccountId;
 
-    @Column("account_id")
-    private UUID accountId;
+    @Column("merchant_account_id")
+    private UUID merchantAccountId;
 
     @Column("amount")
     private BigDecimal amount;
@@ -44,7 +44,7 @@ public class Transaction {
     private String language;
 
     @Column("operation_type")
-    private String operationType;
+    private OperationType operationType;
 
     @Column("createdAt")
     private LocalDateTime createdAt;

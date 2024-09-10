@@ -54,21 +54,21 @@ CREATE TABLE card
 
 CREATE TABLE transaction
 (
-    id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    card_id          UUID,
-    account_id       UUID,
-    amount           DECIMAL(18, 2),
-    currency         VARCHAR(50),
-    status           VARCHAR(50),
-    message          VARCHAR(2048),
-    notification_url VARCHAR(2048),
-    createdAt        DATE,
-    updatedAt        DATE,
-    language         VARCHAR(50),
-    operation_type   VARCHAR(50),
-    paymentMethod    VARCHAR(50),
-    CONSTRAINT fk_card FOREIGN KEY (card_id) REFERENCES card (id),
-    CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES account (id)
+    id                  UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    merchant_account_id UUID,
+    customer_account_id UUID,
+    amount              DECIMAL(18, 2),
+    currency            VARCHAR(50),
+    status              VARCHAR(50),
+    message             VARCHAR(2048),
+    notification_url    VARCHAR(2048),
+    createdAt           DATE,
+    updatedAt           DATE,
+    language            VARCHAR(50),
+    operation_type      VARCHAR(50),
+    paymentMethod       VARCHAR(50),
+    CONSTRAINT fk_account FOREIGN KEY (merchant_account_id) REFERENCES account (id),
+    CONSTRAINT fk_account FOREIGN KEY (customer_account_id) REFERENCES account (id)
 );
 
 CREATE TABLE webhook
