@@ -39,7 +39,7 @@ public class TransactionServiceImpl implements TransactionService {
                 .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
                 .flatMap(merchant -> {
                     if (!merchant.getStatus().equals(Status.ACTIVE)) {
-                        log.warn("Merchant with id {} is not active", merchantId);
+                        log.error("Merchant with id {} is not active", merchantId);
                         return Mono.error(new RuntimeException("Merchant is not active"));
                     }
                     log.info("Merchant with id {} found and is active", merchantId);
@@ -76,7 +76,6 @@ public class TransactionServiceImpl implements TransactionService {
                                                                     return topUpMerchantAccount(customerAccount, merchantAccount, amount, language, notificationUrl, paymentMethod)
                                                                             .flatMap(transaction -> {
                                                                                 log.info("Transaction for amount {} and paymentMethod {} is in progress", amount, paymentMethod);
-                                                                                transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
 
                                                                                 return transactionRepository.save(transaction)
                                                                                         .flatMap(savedTransaction -> {
@@ -120,28 +119,31 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Mono<Transaction> getTransactionDetails(UUID transactionId) {
         return transactionRepository.findById(transactionId)
                 .doOnSuccess(transaction -> log.info("Transaction with id {} has been find successfully", transactionId))
                 .doOnError(error -> log.error("Failed to find transaction with id {}", transactionId, error));
     }
 
-    private Mono<Transaction> topUpMerchantAccount(Account customerAccount, Account merchantAccount, BigDecimal amount, String language, String notificationUrl, String paymentMethod) {
+    private Mono<Transaction> topUpMerchantAccount(Account customerAccount, Account merchantAccount, BigDecimal amount,
+                                                   String language, String notificationUrl, String paymentMethod) {
         customerAccount.setBalance(customerAccount.getBalance().subtract(amount));
         return accountService.update(customerAccount)
                 .flatMap(updatedCustomerAccount -> {
                     merchantAccount.setBalance(merchantAccount.getBalance().add(amount));
                     return accountService.update(merchantAccount)
                             .flatMap(updatedMerchantAccount -> {
-                                Transaction transaction = createTransactionRecord(updatedCustomerAccount, updatedMerchantAccount, amount, language, notificationUrl, paymentMethod);
+                                Transaction transaction = createTransactionRecord(updatedCustomerAccount, updatedMerchantAccount, amount,
+                                        language, notificationUrl, paymentMethod);
                                 return transactionRepository.save(transaction);
                             });
                 });
     }
 
 
-    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount, BigDecimal amount, String language, String notificationUrl,
-                                                String paymentMethod) {
+    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount, BigDecimal amount,
+                                                String language, String notificationUrl, String paymentMethod) {
         Transaction transaction = new Transaction();
         transaction.setCustomerAccountId(customerAccount.getId());
         transaction.setMerchantAccountId(merchantAccount.getId());
