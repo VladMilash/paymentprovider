@@ -1,5 +1,6 @@
 package com.mvo.paymentprovider.service;
 
+import com.mvo.paymentprovider.entity.OperationType;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
 import reactor.core.publisher.Flux;
@@ -17,9 +18,7 @@ public interface TransactionService {
 
     Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus);
 
-    Flux<Transaction> getTransactionsByDay(LocalDate date);
-
-    Flux<Transaction> getTransactionsByPeriod(LocalDate startDate, LocalDate endDate);
+    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, OperationType operationType);
 
     Mono<Transaction> getTransactionDetails(UUID transactionId);
 

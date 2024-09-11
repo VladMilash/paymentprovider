@@ -18,7 +18,5 @@ public interface PayoutService {
 
     Mono<Transaction> getPayoutDetails(UUID transactionId);
 
-    Flux<Transaction> getPayoutsByDay(LocalDate date);
-
     Flux<Transaction> getPayoutsByPeriod(LocalDate startDate, LocalDate endDate);
 }

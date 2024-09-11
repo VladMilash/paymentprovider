@@ -7,6 +7,7 @@ import com.mvo.paymentprovider.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,6 +28,7 @@ public class TransactionServiceImpl implements TransactionService {
     private final WebhookService webhookService;
 
     @Override
+    @Transactional
     public Mono<Transaction> createTransaction(String paymentMethod, BigDecimal amount, String currency,
                                                Long cardNumber, String expDate, String cvv,
                                                String language, String notificationUrl, String firstName,
@@ -93,6 +95,7 @@ public class TransactionServiceImpl implements TransactionService {
 
 
     @Override
+    @Transactional
     public Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus) {
         return transactionRepository.findById(transactionId)
                 .map(transaction -> {
@@ -106,18 +109,21 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Flux<Transaction> getTransactionsByDay(LocalDate date) {
-        return null;
-    }
-
-    @Override
-    public Flux<Transaction> getTransactionsByPeriod(LocalDate startDate, LocalDate endDate) {
-        return null;
+    @Transactional(readOnly = true)
+    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, OperationType operationType) {
+        operationType = OperationType.TOP_UP;
+        LocalDateTime start = startDate.atStartOfDay();
+        LocalDateTime end = endDate.atTime(23, 59, 59);
+        return transactionRepository.getTransactionsByCreatedAtBetweenAndOperationType(start, end, operationType)
+                .doOnNext(transaction -> log.info("Transactions by period {} {} has been find successfully", startDate, endDate))
+                .doOnError(error -> log.error("Failed to find transactions by period {} {}", startDate, endDate, error));
     }
 
     @Override
     public Mono<Transaction> getTransactionDetails(UUID transactionId) {
-        return null;
+        return transactionRepository.findById(transactionId)
+                .doOnSuccess(transaction -> log.info("Transaction with id {} has been find successfully", transactionId))
+                .doOnError(error -> log.error("Failed to find transaction with id {}", transactionId, error));
     }
 
     private Mono<Transaction> topUpMerchantAccount(Account customerAccount, Account merchantAccount, BigDecimal amount, String language, String notificationUrl, String paymentMethod) {
