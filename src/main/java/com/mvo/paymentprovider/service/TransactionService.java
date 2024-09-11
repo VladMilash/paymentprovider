@@ -18,7 +18,7 @@ public interface TransactionService {
 
     Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus);
 
-    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, OperationType operationType);
+    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate);
 
     Mono<Transaction> getTransactionDetails(UUID transactionId);
 

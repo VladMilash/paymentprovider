@@ -110,8 +110,8 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, OperationType operationType) {
-        operationType = OperationType.TOP_UP;
+    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate) {
+        OperationType operationType = OperationType.TOP_UP;
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
         return transactionRepository.getTransactionsByCreatedAtBetweenAndOperationType(start, end, operationType)
