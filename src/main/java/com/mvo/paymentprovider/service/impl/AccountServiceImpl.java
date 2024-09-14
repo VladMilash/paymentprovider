@@ -4,14 +4,14 @@ import com.mvo.paymentprovider.entity.Account;
 import com.mvo.paymentprovider.repository.AccountRepository;
 import com.mvo.paymentprovider.service.AccountService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {

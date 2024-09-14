@@ -5,7 +5,7 @@ import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.TransactionRepository;
 import com.mvo.paymentprovider.service.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -16,7 +16,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PayoutServiceImpl implements PayoutService {
@@ -64,7 +64,7 @@ public class PayoutServiceImpl implements PayoutService {
                                                                     return transactionRepository.save(transaction)
                                                                             .flatMap(savedTransaction -> {
                                                                                 log.info("Payout transaction with id {} successfully saved", savedTransaction.getId());
-                                                                                webhookService.sendNotification(savedTransaction);
+                                                                                webhookService.sendNotification(savedTransaction).subscribe();
                                                                                 return Mono.just(savedTransaction);
                                                                             });
                                                                 });

@@ -1,15 +1,16 @@
 package com.mvo.paymentprovider.security;
 
+import com.mvo.paymentprovider.entity.Status;
 import com.mvo.paymentprovider.service.MerchantService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MerchantDetailService implements ReactiveUserDetailsService {
@@ -19,7 +20,14 @@ public class MerchantDetailService implements ReactiveUserDetailsService {
     @Override
     public Mono<UserDetails> findByUsername(String username) {
         return merchantService.findById(UUID.fromString(username))
-                .map(merchant -> (UserDetails) new MerchantDetails(merchant))
+                .flatMap(merchant -> {
+                    if (merchant.getStatus() == Status.DELETED) {
+                        return Mono.error(new UsernameNotFoundException("Merchant account is deleted"));
+                    }
+                    return Mono.just((UserDetails) new MerchantDetails(merchant));
+
+                })
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("Merchant not found with id: " + username)));
     }
+
 }

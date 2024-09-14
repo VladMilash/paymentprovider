@@ -4,12 +4,12 @@ import com.mvo.paymentprovider.entity.Card;
 import com.mvo.paymentprovider.repository.CardRepository;
 import com.mvo.paymentprovider.service.CardService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CardServiceImpl implements CardService {

@@ -10,7 +10,3 @@ spring:
     locations: filesystem:src/main/resources/db/migration
     user: ${spring.r2dbc.username}
     password: ${spring.r2dbc.password}
-  security:
-    user:
-      name:
-      password:

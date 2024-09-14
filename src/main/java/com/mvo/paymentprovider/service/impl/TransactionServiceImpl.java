@@ -5,7 +5,8 @@ import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.*;
 import com.mvo.paymentprovider.service.*;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -16,7 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransactionServiceImpl implements TransactionService {
@@ -80,7 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
                                                                                 return transactionRepository.save(transaction)
                                                                                         .flatMap(savedTransaction -> {
                                                                                             log.info("Transaction with id {} successfully saved", savedTransaction.getId());
-                                                                                            webhookService.sendNotification(transaction);
+                                                                                            webhookService.sendNotification(transaction).subscribe();
                                                                                             return Mono.just(savedTransaction);
                                                                                         });
                                                                             });

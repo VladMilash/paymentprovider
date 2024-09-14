@@ -4,13 +4,13 @@ import com.mvo.paymentprovider.entity.Merchant;
 import com.mvo.paymentprovider.repository.MerchantRepository;
 import com.mvo.paymentprovider.service.MerchantService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.log4j.Log4j2;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
-@Log4j2
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class MerchantServiceImpl implements MerchantService {
