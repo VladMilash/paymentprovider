@@ -2,7 +2,6 @@ CREATE TABLE merchant
 (
     id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name      VARCHAR(50) NOT NULL,
-    apiKey    VARCHAR(2048),
     secretKey VARCHAR(2048),
     createdAt DATE,
     updatedAt DATE,

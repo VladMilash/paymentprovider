@@ -24,9 +24,6 @@ public class Merchant {
     @Column("name")
     private String name;
 
-    @Column("apikey")
-    private String apikey;
-
     @Column("secretKey")
     private String secretKey;
 

@@ -12,7 +12,6 @@ import java.util.UUID;
 public class MerchantDTO {
     private UUID id;
     private String name;
-    private String apikey;
     private String secretKey;
     private LocalDate createdAt;
     private LocalDate updatedAt;
