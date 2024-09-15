@@ -39,10 +39,6 @@ public class TransactionServiceImpl implements TransactionService {
         return merchantService.findById(merchantId)
                 .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
                 .flatMap(merchant -> {
-                    if (!merchant.getStatus().equals(Status.ACTIVE)) {
-                        log.error("Merchant with id {} is not active", merchantId);
-                        return Mono.error(new RuntimeException("Merchant is not active"));
-                    }
                     log.info("Merchant with id {} found and is active", merchantId);
 
                     return accountService.findByMerchantIdAndCurrency(merchantId, currency)

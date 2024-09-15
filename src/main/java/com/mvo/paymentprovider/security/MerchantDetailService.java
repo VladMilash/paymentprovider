@@ -21,8 +21,8 @@ public class MerchantDetailService implements ReactiveUserDetailsService {
     public Mono<UserDetails> findByUsername(String username) {
         return merchantService.findById(UUID.fromString(username))
                 .flatMap(merchant -> {
-                    if (merchant.getStatus() == Status.DELETED) {
-                        return Mono.error(new UsernameNotFoundException("Merchant account is deleted"));
+                    if (!merchant.getStatus().equals(Status.ACTIVE)) {
+                        return Mono.error(new UsernameNotFoundException("Merchant account is not ACTIVE"));
                     }
                     return Mono.just((UserDetails) new MerchantDetails(merchant));
 

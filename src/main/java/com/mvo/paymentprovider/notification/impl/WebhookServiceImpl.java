@@ -42,7 +42,8 @@ public class WebhookServiceImpl implements WebhookService {
     private Mono<Void> handleWebhookResponse(ClientResponse response, Webhook webhook) {
         if (response.statusCode().is2xxSuccessful()) {
             webhook.setStatus("SUCCESS");
-            webhook.setResponseStatus("200 OK");
+            webhook.setResponseStatus(response.statusCode().toString());
+
         } else {
             webhook.setStatus("FAILED");
             webhook.setResponseStatus(response.statusCode().toString());

@@ -66,8 +66,8 @@ CREATE TABLE transaction
     language            VARCHAR(50),
     operation_type      VARCHAR(50),
     paymentMethod       VARCHAR(50),
-    CONSTRAINT fk_account FOREIGN KEY (merchant_account_id) REFERENCES account (id),
-    CONSTRAINT fk_account FOREIGN KEY (customer_account_id) REFERENCES account (id)
+    CONSTRAINT fk_merchant_account FOREIGN KEY (merchant_account_id) REFERENCES account (id),
+    CONSTRAINT fk_customer_account FOREIGN KEY (customer_account_id) REFERENCES account (id)
 );
 
 CREATE TABLE webhook
