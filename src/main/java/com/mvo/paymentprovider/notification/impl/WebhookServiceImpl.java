@@ -29,7 +29,8 @@ public class WebhookServiceImpl implements WebhookService {
     public Mono<Transaction> sendNotification(Transaction transaction) {
         log.info("Sending notification for transaction: {}", transaction.getId());
         return createWebhookRecord(transaction)
-                .doOnNext(webhook -> log.info("Created webhook with id {} for transaction id {}", webhook.getId(), transaction.getId()))
+                .doOnNext(webhook -> log.info("Created webhook for transaction id {} webhook id {}", transaction.getId(), webhook.getId()))
+                .doOnError(error -> log.error("Error creating webhook for transaction id {}: {}", transaction.getId(), error.getMessage()))
                 .flatMap(webhook -> webClient.post()
                         .uri(webhook.getNotificationUrl())
                         .bodyValue(transactionMapper.map(transaction))
@@ -49,7 +50,8 @@ public class WebhookServiceImpl implements WebhookService {
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
-        return webhookRepository.save(webhook);
+        return webhookRepository.save(webhook)
+                .doOnError(error -> log.error("Error saving webhook for transaction id {}: {}", transaction.getId(), error.getMessage()));
     }
 
     private Mono<Void> handleFailedAttempt(Webhook webhook) {
