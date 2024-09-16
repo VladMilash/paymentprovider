@@ -35,9 +35,6 @@ public class Webhook {
     @Column("response_status")
     private String responseStatus;
 
-    @Column("response_body")
-    private String responseBody;
-
     @Column("createdAt")
     private LocalDateTime createdAt;
 

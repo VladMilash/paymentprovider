@@ -81,6 +81,5 @@ CREATE TABLE webhook
     createdAt         DATE,
     updatedAt         DATE,
     response_status   VARCHAR(50),
-    response_body     VARCHAR(50),
     CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transaction (id)
 );

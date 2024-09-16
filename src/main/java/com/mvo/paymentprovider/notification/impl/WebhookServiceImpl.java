@@ -28,8 +28,8 @@ public class WebhookServiceImpl implements WebhookService {
     @Override
     public Mono<Transaction> sendNotification(Transaction transaction) {
         log.info("Sending notification for transaction: {}", transaction.getId());
-        return webhookRepository.findByTransactionId(transaction.getId())
-                .doOnNext(webhook -> log.info("Found webhook for transaction: {}", webhook.getId()))
+        return createWebhookRecord(transaction)
+                .doOnNext(webhook -> log.info("Created webhook with id {} for transaction id {}", webhook.getId(), transaction.getId()))
                 .flatMap(webhook -> webClient.post()
                         .uri(webhook.getNotificationUrl())
                         .bodyValue(transactionMapper.map(transaction))
@@ -39,6 +39,17 @@ public class WebhookServiceImpl implements WebhookService {
                         .onErrorResume(error -> handleFailedAttempt(webhook)
                                 .then(Mono.error(error))
                         ));
+    }
+
+    private Mono<Webhook> createWebhookRecord(Transaction transaction) {
+        Webhook webhook = Webhook.builder()
+                .transactionId(transaction.getId())
+                .notificationUrl(transaction.getNotificationUrl())
+                .attempts(0)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+        return webhookRepository.save(webhook);
     }
 
     private Mono<Void> handleFailedAttempt(Webhook webhook) {
@@ -68,6 +79,7 @@ public class WebhookServiceImpl implements WebhookService {
     private Mono<Void> saveWebhookWithAttemptUpdate(Webhook webhook) {
         webhook.setAttempts(webhook.getAttempts() + 1);
         webhook.setLastAttemptTime(LocalDateTime.now());
+        webhook.setUpdatedAt(LocalDateTime.now());
         return webhookRepository.save(webhook)
                 .doOnSuccess(savedWebhook -> log.info("Webhook updated: {}", savedWebhook.getId()))
                 .doOnError(error -> log.error("Error saving webhook update: {}", error.getMessage()))
