@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.mvo.paymentprovider.entity.OperationType;
 import com.mvo.paymentprovider.entity.TransactionStatus;
+import lombok.Builder;
 import lombok.Data;
 import org.springframework.data.relational.core.mapping.Column;
 
@@ -12,6 +13,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
+@Builder(toBuilder = true)
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TransactionDTO {
 
