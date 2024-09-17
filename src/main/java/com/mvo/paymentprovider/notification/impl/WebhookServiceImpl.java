@@ -24,6 +24,8 @@ public class WebhookServiceImpl implements WebhookService {
     private final WebhookRepository webhookRepository;
     private final TransactionMapper transactionMapper;
     private final WebClient webClient;
+    private final int MAX_ATTEMPTS = 3;
+    private final int DURATION_OF_PAUSES_BETWEEN_ATTEMPTS = 5;
 
     @Override
     public Mono<Transaction> sendNotification(Transaction transaction) {
@@ -99,7 +101,7 @@ public class WebhookServiceImpl implements WebhookService {
     }
 
     private Retry retrySpec(Webhook webhook) {
-        return Retry.fixedDelay(3, Duration.ofSeconds(5))
+        return Retry.fixedDelay(MAX_ATTEMPTS, Duration.ofSeconds(DURATION_OF_PAUSES_BETWEEN_ATTEMPTS))
                 .filter(this::filterResponseExceptions)
                 .doBeforeRetry(retrySignal -> {
                     log.info("Preparing to retry for webhook: {}", webhook.getId());
