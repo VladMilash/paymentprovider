@@ -1,5 +1,9 @@
 package com.mvo.paymentprovider.service;
 
+import com.mvo.paymentprovider.dto.CardDTO;
+import com.mvo.paymentprovider.dto.CustomerDTO;
+import com.mvo.paymentprovider.dto.MerchantDTO;
+import com.mvo.paymentprovider.dto.TransactionDTO;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
 import reactor.core.publisher.Flux;
@@ -10,9 +14,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public interface PayoutService {
-    Mono<Transaction> createPayout(String paymentMethod, BigDecimal amount, String currency,
-                                   Long cardNumber, String language, String notificationUrl,
-                                   String firstName, String lastName, String country, UUID merchantId);
+    Mono<Transaction> createPayout(TransactionDTO transactionDTO, CardDTO cardDTO,
+                                   CustomerDTO customerDTO, MerchantDTO merchantDTO);
 
     Mono<Transaction> updatePayoutStatus(UUID transactionId, TransactionStatus newStatus);
 
