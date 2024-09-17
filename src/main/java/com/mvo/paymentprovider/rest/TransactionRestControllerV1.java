@@ -16,8 +16,11 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.UUID;
+
 
 @RequiredArgsConstructor
 @RestController
@@ -42,16 +45,22 @@ public class TransactionRestControllerV1 {
     }
 
     @GetMapping
-    public Flux<TransactionDTO> getTransactionsByCurrentDay() {
-        return transactionService.getTransactionsByCreatedAtBetween(LocalDate.now(), LocalDate.now())
-                .map(transactionMapper::map);
+    public Flux<TransactionDTO> getTransactions(
+            @RequestParam(value = "start_date", required = false) Long startDate,
+            @RequestParam(value = "end_date", required = false) Long endDate) {
 
-    }
+        LocalDate start;
+        LocalDate end;
 
-    @GetMapping
-    public Flux<TransactionDTO> getTransactionByPeriod(@RequestParam("start_date") LocalDate startDate,
-                                                       @RequestParam("end_date") LocalDate endDate) {
-        return transactionService.getTransactionsByCreatedAtBetween(startDate, endDate)
+        if (startDate == null || endDate == null) {
+            start = LocalDate.now();
+            end = LocalDate.now();
+        } else {
+            start = Instant.ofEpochSecond(startDate).atZone(ZoneId.systemDefault()).toLocalDate();
+            end = Instant.ofEpochSecond(endDate).atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+
+        return transactionService.getTransactionsByCreatedAtBetween(start, end)
                 .map(transactionMapper::map);
     }
 
