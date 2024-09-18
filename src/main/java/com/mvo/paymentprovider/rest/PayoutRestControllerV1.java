@@ -40,7 +40,8 @@ public class PayoutRestControllerV1 {
     @GetMapping
     public Flux<TransactionDTO> getPayouts(
             @RequestParam(value = "start_date", required = false) Long startDate,
-            @RequestParam(value = "end_date", required = false) Long endDate) {
+            @RequestParam(value = "end_date", required = false) Long endDate,
+            @AuthenticationPrincipal MerchantDetails merchantDetails) {
 
         LocalDate start;
         LocalDate end;
@@ -53,7 +54,7 @@ public class PayoutRestControllerV1 {
             end = Instant.ofEpochSecond(endDate).atZone(ZoneId.systemDefault()).toLocalDate();
         }
 
-        return payoutService.getPayoutsByCreatedAtBetween(start, end)
+        return payoutService.getPayoutsByCreatedAtBetween(start, end, merchantDetails.getMerchant().getId())
                 .map(transactionMapper::map);
     }
 

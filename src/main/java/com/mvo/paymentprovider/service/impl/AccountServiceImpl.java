@@ -18,6 +18,13 @@ public class AccountServiceImpl implements AccountService {
     private final AccountRepository accountRepository;
 
     @Override
+    public Mono<Account> findByMerchantId(UUID merchantId) {
+        return accountRepository.findByMerchantId(merchantId)
+                .doOnSuccess(account -> log.info("Account with merchantId {} has been finding successfully", merchantId))
+                .doOnError(error -> log.error("Failed to find account with merchantId {}", merchantId));
+    }
+
+    @Override
     public Mono<Account> createAccount(Account account) {
         return accountRepository.save(account)
                 .doOnSuccess(savedAccount -> log.info("account with id {} has been saved successfully", account.getId()))

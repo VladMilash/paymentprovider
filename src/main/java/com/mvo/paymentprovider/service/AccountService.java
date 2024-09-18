@@ -14,4 +14,6 @@ public interface AccountService {
 
     Mono<Account> update(Account account);
 
+    Mono<Account> findByMerchantId(UUID merchantId);
+
 }

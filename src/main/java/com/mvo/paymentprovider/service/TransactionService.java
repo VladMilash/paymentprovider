@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface TransactionService {
@@ -16,7 +17,7 @@ public interface TransactionService {
 
     Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus);
 
-    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate);
+    Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, UUID merchantID);
 
     Mono<Transaction> getTransactionDetails(UUID transactionId);
 

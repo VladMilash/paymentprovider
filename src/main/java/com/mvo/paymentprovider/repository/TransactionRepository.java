@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 public interface TransactionRepository extends R2dbcRepository<Transaction, UUID> {
-    public Flux<Transaction> getTransactionsByCreatedAtBetweenAndOperationType(LocalDateTime startDate, LocalDateTime endDate, OperationType operationType);
+    public Flux<Transaction> getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId (LocalDateTime startDate, LocalDateTime endDate,
+                                                                                                    OperationType operationType,UUID accountMerchantId);
 
 }

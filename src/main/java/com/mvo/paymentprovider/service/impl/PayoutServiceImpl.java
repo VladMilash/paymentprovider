@@ -102,15 +102,20 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     @Transactional(readOnly = true)
-    public Flux<Transaction> getPayoutsByCreatedAtBetween(LocalDate startDate, LocalDate endDate) {
+    public Flux<Transaction> getPayoutsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, UUID merchantID) {
+
         OperationType operationType = OperationType.PAYOUT;
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
-        return transactionRepository.getTransactionsByCreatedAtBetweenAndOperationType(start, end, operationType)
-                .doOnNext(transaction -> log.info("Payouts by period {} {} have been found successfully",
-                        startDate, endDate))
-                .doOnError(error -> log.error("Failed to find Payouts by period {} {}",
-                        startDate, endDate, error));
+
+        return accountService.findByMerchantId(merchantID)
+                .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
+                                operationType, account.getMerchantId())
+                        .doOnNext(transaction -> log.info("Payouts by period {} {} have been found successfully",
+                                startDate, endDate))
+                        .doOnError(error -> log.error("Failed to find Payouts by period {} {}",
+                                startDate, endDate, error))
+                );
     }
 
     private Mono<Transaction> processPayout(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {

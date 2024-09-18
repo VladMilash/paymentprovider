@@ -105,14 +105,22 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate) {
+    public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, UUID merchantID) {
+
         OperationType operationType = OperationType.TOP_UP;
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
-        return transactionRepository.getTransactionsByCreatedAtBetweenAndOperationType(start, end, operationType)
-                .doOnNext(transaction -> log.info("Transactions by period {} {} have been found successfully", startDate, endDate))
-                .doOnError(error -> log.error("Failed to find transactions by period {} {}", startDate, endDate, error));
+
+        return accountService.findByMerchantId(merchantID)
+                .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
+                                operationType, account.getMerchantId())
+                        .doOnNext(transaction -> log.info("Transactions by period {} {} have been found successfully",
+                                startDate, endDate))
+                        .doOnError(error -> log.error("Failed to find transactions by period {} {}",
+                                startDate, endDate, error))
+                );
     }
+
 
     @Override
     @Transactional(readOnly = true)
