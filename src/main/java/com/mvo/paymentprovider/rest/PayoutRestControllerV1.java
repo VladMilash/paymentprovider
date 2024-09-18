@@ -1,12 +1,10 @@
 package com.mvo.paymentprovider.rest;
 
-import com.mvo.paymentprovider.dto.CardDTO;
-import com.mvo.paymentprovider.dto.CustomerDTO;
-import com.mvo.paymentprovider.dto.MerchantDTO;
-import com.mvo.paymentprovider.dto.TransactionDTO;
+import com.mvo.paymentprovider.dto.*;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
+import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.PayoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -29,11 +27,10 @@ public class PayoutRestControllerV1 {
     private final TransactionMapper transactionMapper;
 
     @PostMapping
-    public Mono<ResponseEntity<TransactionDTO>> createPayout(@RequestBody TransactionDTO transactionDTO,
-                                                             @RequestBody CardDTO cardDTO,
-                                                             @RequestBody CustomerDTO customerDTO,
-                                                             @AuthenticationPrincipal MerchantDTO merchantDTO) {
-        return payoutService.createPayout(transactionDTO, cardDTO, customerDTO, merchantDTO)
+    public Mono<ResponseEntity<TransactionDTO>> createPayout(@AuthenticationPrincipal MerchantDetails merchantDetails,
+                                                             @RequestBody RequestDTO requestDTO) {
+        requestDTO.setMerchantId(merchantDetails.getMerchant().getId());
+        return payoutService.createPayout(requestDTO)
                 .map(transaction -> ResponseEntity.status(HttpStatus.OK)
                         .body(createReturnedTransactionDTO(transaction)))
                 .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)

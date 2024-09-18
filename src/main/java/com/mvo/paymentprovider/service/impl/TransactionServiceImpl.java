@@ -1,9 +1,6 @@
 package com.mvo.paymentprovider.service.impl;
 
-import com.mvo.paymentprovider.dto.CardDTO;
-import com.mvo.paymentprovider.dto.CustomerDTO;
-import com.mvo.paymentprovider.dto.MerchantDTO;
-import com.mvo.paymentprovider.dto.TransactionDTO;
+import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
 import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.*;
@@ -15,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -33,52 +29,51 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public Mono<Transaction> createTransaction(TransactionDTO transactionDTO, CardDTO cardDTO,
-                                               CustomerDTO customerDTO, MerchantDTO merchantDTO) {
+    public Mono<Transaction> createTransaction(RequestDTO requestDTO) {
         log.info("Creating transaction: paymentMethod {}, amount {}, currency {}, merchantId {}",
-                transactionDTO.getPaymentMethod(), transactionDTO.getAmount(), transactionDTO.getCurrency(), merchantDTO.getId());
+                requestDTO.getPaymentMethod(), requestDTO.getAmount(), requestDTO.getCurrency(), requestDTO.getMerchantId());
 
-        return merchantService.findById(merchantDTO.getId())
+        return merchantService.findById(requestDTO.getMerchantId())
                 .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
-                .flatMap(merchant -> accountService.findByMerchantIdAndCurrency(merchantDTO.getId(), transactionDTO.getCurrency())
+                .flatMap(merchant -> accountService.findByMerchantIdAndCurrency(requestDTO.getMerchantId(), requestDTO.getCurrency())
                         .switchIfEmpty(Mono.error(new RuntimeException("Merchant account not found")))
                         .flatMap(merchantAccount -> {
                             log.info("Merchant account for merchantId {} and currency {} found",
-                                    merchantDTO.getId(), transactionDTO.getCurrency());
+                                    requestDTO.getMerchantId(), requestDTO.getCurrency());
 
-                            return customerService.findByFirstnameAndLastnameAndCountry(customerDTO.getFirstname(),
-                                            customerDTO.getLastname(), customerDTO.getCountry())
+                            return customerService.findByFirstnameAndLastnameAndCountry(requestDTO.getFirstName(),
+                                            requestDTO.getLastName(), requestDTO.getCountry())
                                     .switchIfEmpty(Mono.defer(() -> {
                                         log.info("Customer not found, creating new customer: firstName {}, lastName {}, country {}",
-                                                customerDTO.getFirstname(), customerDTO.getLastname(), customerDTO.getCountry());
-                                        return customerService.createCustomer(createCustomer(customerDTO));
+                                                requestDTO.getFirstName(), requestDTO.getLastName(), requestDTO.getCountry());
+                                        return customerService.createCustomer(createCustomer(requestDTO));
                                     }))
                                     .flatMap(customer -> {
                                         log.info("Customer with name {} {} found/created",
-                                                customerDTO.getFirstname(), customerDTO.getLastname());
+                                                requestDTO.getFirstName(), requestDTO.getLastName());
 
-                                        return accountService.findByCustomerIdAndCurrency(customer.getId(), transactionDTO.getCurrency())
+                                        return accountService.findByCustomerIdAndCurrency(customer.getId(), requestDTO.getCurrency())
                                                 .switchIfEmpty(Mono.defer(() -> {
                                                     log.info("Customer account not found, creating new account for customerId {} and currency {}",
-                                                            customer.getId(), transactionDTO.getCurrency());
-                                                    return accountService.createAccount(createAccount(customer, transactionDTO.getCurrency()));
+                                                            customer.getId(), requestDTO.getCurrency());
+                                                    return accountService.createAccount(createAccount(customer, requestDTO.getCurrency()));
                                                 }))
                                                 .flatMap(customerAccount -> {
                                                     log.info("Customer account found/created for customerId {} and currency {}",
-                                                            customer.getId(), transactionDTO.getCurrency());
+                                                            customer.getId(), requestDTO.getCurrency());
 
-                                                    return cardService.findByCardNumber(cardDTO.getCardNumber())
+                                                    return cardService.findByCardNumber(requestDTO.getCardNumber())
                                                             .switchIfEmpty(Mono.defer(() -> {
-                                                                log.info("Card not found, creating new card for cardNumber {}", cardDTO.getCardNumber());
-                                                                return cardService.createCard(createCard(customerAccount, cardDTO));
+                                                                log.info("Card not found, creating new card for cardNumber {}", requestDTO.getCardNumber());
+                                                                return cardService.createCard(createCard(customerAccount, requestDTO));
                                                             }))
                                                             .flatMap(card -> {
-                                                                log.info("Card with cardNumber {} found/created", cardDTO.getCardNumber());
+                                                                log.info("Card with cardNumber {} found/created", requestDTO.getCardNumber());
 
-                                                                return topUpMerchantAccount(customerAccount, merchantAccount, transactionDTO)
+                                                                return topUpMerchantAccount(customerAccount, merchantAccount, requestDTO)
                                                                         .flatMap(transaction -> {
                                                                             log.info("Transaction for amount {} and paymentMethod {} is in progress",
-                                                                                    transactionDTO.getAmount(), transactionDTO.getPaymentMethod());
+                                                                                    requestDTO.getAmount(), requestDTO.getPaymentMethod());
 
                                                                             return transactionRepository.save(transaction)
                                                                                     .flatMap(savedTransaction -> {
@@ -127,54 +122,53 @@ public class TransactionServiceImpl implements TransactionService {
                 .doOnError(error -> log.error("Failed to find transaction with id {}", transactionId, error));
     }
 
-    private Mono<Transaction> topUpMerchantAccount(Account customerAccount, Account merchantAccount, TransactionDTO transactionDTO) {
-        customerAccount.setBalance(customerAccount.getBalance().subtract(transactionDTO.getAmount()));
+    private Mono<Transaction> topUpMerchantAccount(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {
+        customerAccount.setBalance(customerAccount.getBalance().subtract(requestDTO.getAmount()));
         return accountService.update(customerAccount)
                 .flatMap(updatedCustomerAccount -> {
-                    merchantAccount.setBalance(merchantAccount.getBalance().add(transactionDTO.getAmount()));
+                    merchantAccount.setBalance(merchantAccount.getBalance().add(requestDTO.getAmount()));
                     return accountService.update(merchantAccount)
                             .flatMap(updatedMerchantAccount -> {
-                                Transaction transaction = createTransactionRecord(updatedCustomerAccount, updatedMerchantAccount, transactionDTO);
+                                Transaction transaction = createTransactionRecord(updatedCustomerAccount, updatedMerchantAccount, requestDTO);
                                 return transactionRepository.save(transaction);
                             });
                 });
     }
 
-    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount,
-                                                TransactionDTO transactionDTO) {
+    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {
         Transaction transaction = new Transaction();
         transaction.setCustomerAccountId(customerAccount.getId());
         transaction.setMerchantAccountId(merchantAccount.getId());
         transaction.setOperationType(OperationType.TOP_UP);
-        transaction.setAmount(transactionDTO.getAmount());
+        transaction.setAmount(requestDTO.getAmount());
         transaction.setCurrency(customerAccount.getCurrency());
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setUpdatedAt(LocalDateTime.now());
         transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
-        transaction.setLanguage(transactionDTO.getLanguage());
+        transaction.setLanguage(requestDTO.getLanguage());
         transaction.setMessage("OK");
-        transaction.setNotificationUrl(transactionDTO.getNotificationUrl());
-        transaction.setPaymentMethod(transactionDTO.getPaymentMethod());
+        transaction.setNotificationUrl(requestDTO.getNotificationUrl());
+        transaction.setPaymentMethod(requestDTO.getPaymentMethod());
         return transaction;
     }
 
-    private Card createCard(Account account, CardDTO cardDTO) {
+    private Card createCard(Account account, RequestDTO requestDTO) {
         Card card = new Card();
         card.setAccountId(account.getId());
-        card.setCardNumber(cardDTO.getCardNumber());
-        card.setExpDate(cardDTO.getExpDate());
-        card.setCvv(cardDTO.getCvv());
+        card.setCardNumber(requestDTO.getCardNumber());
+        card.setExpDate(requestDTO.getExpDate());
+        card.setCvv(requestDTO.getCvv());
         card.setCreatedAt(LocalDateTime.now());
         card.setUpdatedAt(LocalDateTime.now());
         card.setStatus(Status.ACTIVE);
         return card;
     }
 
-    private Customer createCustomer(CustomerDTO customerDTO) {
+    private Customer createCustomer(RequestDTO requestDTO) {
         Customer customer = new Customer();
-        customer.setFirstname(customerDTO.getFirstname());
-        customer.setLastname(customerDTO.getLastname());
-        customer.setCountry(customerDTO.getCountry());
+        customer.setFirstname(requestDTO.getFirstName());
+        customer.setLastname(requestDTO.getLastName());
+        customer.setCountry(requestDTO.getCountry());
         customer.setCreatedAt(LocalDateTime.now());
         customer.setUpdatedAt(LocalDateTime.now());
         customer.setStatus(Status.ACTIVE);

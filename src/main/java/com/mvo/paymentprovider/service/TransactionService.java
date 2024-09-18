@@ -1,9 +1,6 @@
 package com.mvo.paymentprovider.service;
 
-import com.mvo.paymentprovider.dto.CardDTO;
-import com.mvo.paymentprovider.dto.CustomerDTO;
-import com.mvo.paymentprovider.dto.MerchantDTO;
-import com.mvo.paymentprovider.dto.TransactionDTO;
+import com.mvo.paymentprovider.dto.*;
 import com.mvo.paymentprovider.entity.OperationType;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
@@ -15,8 +12,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public interface TransactionService {
-    Mono<Transaction> createTransaction(TransactionDTO transactionDTO, CardDTO cardDTO,
-                                        CustomerDTO customerDTO, MerchantDTO merchantDTO);
+    Mono<Transaction> createTransaction(RequestDTO requestDTO);
 
     Mono<Transaction> updateTransactionStatus(UUID transactionId, TransactionStatus newStatus);
 

@@ -1,9 +1,6 @@
 package com.mvo.paymentprovider.service.impl;
 
-import com.mvo.paymentprovider.dto.CardDTO;
-import com.mvo.paymentprovider.dto.CustomerDTO;
-import com.mvo.paymentprovider.dto.MerchantDTO;
-import com.mvo.paymentprovider.dto.TransactionDTO;
+import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
 import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.TransactionRepository;
@@ -31,40 +28,39 @@ public class PayoutServiceImpl implements PayoutService {
 
     @Override
     @Transactional
-    public Mono<Transaction> createPayout(TransactionDTO transactionDTO, CardDTO cardDTO,
-                                          CustomerDTO customerDTO, MerchantDTO merchantDTO) {
+    public Mono<Transaction> createPayout(RequestDTO requestDTO) {
         log.info("Creating payout: paymentMethod {}, amount {}, currency {}, merchantId {}",
-                transactionDTO.getPaymentMethod(), transactionDTO.getAmount(), transactionDTO.getCurrency(), merchantDTO.getId());
+                requestDTO.getPaymentMethod(), requestDTO.getAmount(), requestDTO.getCurrency(), requestDTO.getMerchantId());
 
-        return merchantService.findById(merchantDTO.getId())
+        return merchantService.findById(requestDTO.getMerchantId())
                 .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
                 .flatMap(merchant -> {
-                    log.info("Merchant with id {} found and is active", merchantDTO.getId());
+                    log.info("Merchant with id {} found and is active", requestDTO.getMerchantId());
 
-                    return accountService.findByMerchantIdAndCurrency(merchantDTO.getId(), transactionDTO.getCurrency())
+                    return accountService.findByMerchantIdAndCurrency(requestDTO.getMerchantId(), requestDTO.getCurrency())
                             .switchIfEmpty(Mono.error(new RuntimeException("Merchant account not found")))
                             .flatMap(merchantAccount -> {
                                 log.info("Merchant account for merchantId {} and currency {} found",
-                                        merchantDTO.getId(), transactionDTO.getCurrency());
+                                        requestDTO.getMerchantId(), requestDTO.getCurrency());
 
-                                return customerService.findByFirstnameAndLastnameAndCountry(customerDTO.getFirstname(),
-                                                customerDTO.getLastname(), customerDTO.getCountry())
+                                return customerService.findByFirstnameAndLastnameAndCountry(requestDTO.getFirstName(),
+                                                requestDTO.getLastName(), requestDTO.getCountry())
                                         .switchIfEmpty(Mono.error(new RuntimeException("Customer not found")))
                                         .flatMap(customer -> {
-                                            log.info("Customer with name {} {} found", customerDTO.getFirstname(),
-                                                    customerDTO.getLastname());
+                                            log.info("Customer with name {} {} found", requestDTO.getFirstName(),
+                                                    requestDTO.getLastName());
 
                                             return accountService.findByCustomerIdAndCurrency(customer.getId(),
-                                                            transactionDTO.getCurrency())
+                                                            requestDTO.getCurrency())
                                                     .switchIfEmpty(Mono.error(new RuntimeException("Customer account not found")))
                                                     .flatMap(customerAccount -> {
                                                         log.info("Customer account for customerId {} and currency {} found",
-                                                                customer.getId(), transactionDTO.getCurrency());
+                                                                customer.getId(), requestDTO.getCurrency());
 
-                                                        return processPayout(customerAccount, merchantAccount, transactionDTO)
+                                                        return processPayout(customerAccount, merchantAccount, requestDTO)
                                                                 .flatMap(transaction -> {
                                                                     log.info("Payout transaction for amount {} created",
-                                                                            transactionDTO.getAmount());
+                                                                            requestDTO.getAmount());
 
                                                                     return transactionRepository.save(transaction)
                                                                             .flatMap(savedTransaction -> {
@@ -117,38 +113,38 @@ public class PayoutServiceImpl implements PayoutService {
                         startDate, endDate, error));
     }
 
-    private Mono<Transaction> processPayout(Account customerAccount, Account merchantAccount, TransactionDTO transactionDTO) {
-        if (merchantAccount.getBalance().compareTo(transactionDTO.getAmount()) < 0) {
+    private Mono<Transaction> processPayout(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {
+        if (merchantAccount.getBalance().compareTo(requestDTO.getAmount()) < 0) {
             return Mono.error(new RuntimeException("There are not enough funds in the merchant's account for payment"));
         }
 
-        merchantAccount.setBalance(merchantAccount.getBalance().subtract(transactionDTO.getAmount()));
+        merchantAccount.setBalance(merchantAccount.getBalance().subtract(requestDTO.getAmount()));
         return accountService.update(merchantAccount)
                 .flatMap(updatedMerchantAccount -> {
-                    customerAccount.setBalance(customerAccount.getBalance().add(transactionDTO.getAmount()));
+                    customerAccount.setBalance(customerAccount.getBalance().add(requestDTO.getAmount()));
                     return accountService.update(customerAccount)
                             .flatMap(updatedCustomerAccount -> {
                                 Transaction transaction = createTransactionRecord(updatedCustomerAccount,
-                                        updatedMerchantAccount, transactionDTO);
+                                        updatedMerchantAccount, requestDTO);
                                 return transactionRepository.save(transaction);
                             });
                 });
     }
 
-    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount, TransactionDTO transactionDTO) {
+    private Transaction createTransactionRecord(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {
         Transaction transaction = new Transaction();
         transaction.setCustomerAccountId(customerAccount.getId());
         transaction.setMerchantAccountId(merchantAccount.getId());
         transaction.setOperationType(OperationType.PAYOUT);
-        transaction.setAmount(transactionDTO.getAmount());
+        transaction.setAmount(requestDTO.getAmount());
         transaction.setCurrency(customerAccount.getCurrency());
         transaction.setCreatedAt(LocalDateTime.now());
         transaction.setUpdatedAt(LocalDateTime.now());
         transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
-        transaction.setLanguage(transactionDTO.getLanguage());
+        transaction.setLanguage(requestDTO.getLanguage());
         transaction.setMessage("Payout in progress");
-        transaction.setNotificationUrl(transactionDTO.getNotificationUrl());
-        transaction.setPaymentMethod(transactionDTO.getPaymentMethod());
+        transaction.setNotificationUrl(requestDTO.getNotificationUrl());
+        transaction.setPaymentMethod(requestDTO.getPaymentMethod());
         return transaction;
     }
 }
