@@ -2,7 +2,6 @@ package com.mvo.paymentprovider.rest;
 
 import com.mvo.paymentprovider.dto.*;
 import com.mvo.paymentprovider.entity.Transaction;
-import com.mvo.paymentprovider.entity.TransactionStatus;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.TransactionService;
@@ -32,9 +31,7 @@ public class TransactionRestControllerV1 {
         requestDTO.setMerchantId(merchantDetails.getMerchant().getId());
         return transactionService.createTransaction(requestDTO)
                 .map(transaction -> ResponseEntity.status(HttpStatus.OK)
-                        .body(createReturnedTransactionDTO(transaction)))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(TransactionDTO.builder().transactionStatus(TransactionStatus.FAILED).message(e.getMessage()).build())));
+                        .body(createReturnedTransactionDTO(transaction)));
     }
 
     @GetMapping
