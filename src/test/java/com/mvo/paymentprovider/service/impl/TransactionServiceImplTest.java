@@ -3,7 +3,6 @@ package com.mvo.paymentprovider.service.impl;
 import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
 import com.mvo.paymentprovider.notification.WebhookService;
-import com.mvo.paymentprovider.notification.impl.WebhookServiceImpl;
 import com.mvo.paymentprovider.repository.*;
 import com.mvo.paymentprovider.service.AccountService;
 import com.mvo.paymentprovider.service.CardService;
@@ -21,16 +20,14 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static reactor.core.publisher.Mono.when;
 
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceImplTest {
@@ -171,12 +168,29 @@ class TransactionServiceImplTest {
     }
 
     @Test
-    void updateTransactionStatus() {
-    }
-
-    @Test
     void getTransactionsByCreatedAtBetween() {
+        LocalDate startDate = LocalDate.of(2023, 9, 1);
+        LocalDate endDate = LocalDate.of(2023, 9, 30);
 
+        List<Transaction> transactions = new ArrayList<>();
+        transactions.add(transaction);
+
+        Mockito.when(accountService.findByMerchantId(any(UUID.class)))
+                .thenReturn(Mono.just(merchantAccount));
+
+        Mockito.when(transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(
+                        any(LocalDateTime.class), any(LocalDateTime.class), any(OperationType.class), any(UUID.class)))
+                .thenReturn(Flux.fromIterable(transactions));
+
+        StepVerifier.create(transactionService.getTransactionsByCreatedAtBetween(startDate, endDate, merchantId))
+                .expectNextMatches(returnedTransaction ->
+                        returnedTransaction.getId().equals(transaction.getId())
+                )
+                .verifyComplete();
+
+        verify(accountService, Mockito.times(1)).findByMerchantId(any(UUID.class));
+        verify(transactionRepository, Mockito.times(1)).getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(
+                any(LocalDateTime.class), any(LocalDateTime.class), any(OperationType.class), any(UUID.class));
     }
 
     @Test
