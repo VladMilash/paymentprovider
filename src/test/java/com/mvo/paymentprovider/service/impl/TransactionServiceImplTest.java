@@ -1,0 +1,196 @@
+package com.mvo.paymentprovider.service.impl;
+
+import com.mvo.paymentprovider.dto.RequestDTO;
+import com.mvo.paymentprovider.entity.*;
+import com.mvo.paymentprovider.notification.WebhookService;
+import com.mvo.paymentprovider.notification.impl.WebhookServiceImpl;
+import com.mvo.paymentprovider.repository.*;
+import com.mvo.paymentprovider.service.AccountService;
+import com.mvo.paymentprovider.service.CardService;
+import com.mvo.paymentprovider.service.CustomerService;
+import com.mvo.paymentprovider.service.MerchantService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static reactor.core.publisher.Mono.when;
+
+@ExtendWith(MockitoExtension.class)
+class TransactionServiceImplTest {
+    @Mock
+    private TransactionRepository transactionRepository;
+    @Mock
+    private AccountService accountService;
+    @Mock
+    private CardService cardService;
+    @Mock
+    private MerchantService merchantService;
+    @Mock
+    private CustomerService customerService;
+    @Mock
+    private WebhookService webhookService;
+
+    @InjectMocks
+    private TransactionServiceImpl transactionService;
+
+
+    private Transaction transaction;
+    private Account merchantAccount;
+    private Account customerAccount;
+    private Merchant merchant;
+    private Customer customer;
+    private Card card;
+    private RequestDTO requestDTO;
+
+
+    private final UUID transactionId = UUID.fromString("12122122-212b-4077-af84-694a0e69b8e1");
+    private final UUID merchantId = UUID.fromString("22222222-212b-4077-af84-694a0e69b8e1");
+    private final UUID customerId = UUID.fromString("33333333-212b-4077-af84-694a0e69b8e1");
+
+    @BeforeEach
+    void setUp() {
+        transaction = Transaction.builder()
+                .id(transactionId)
+                .build();
+
+        merchantAccount = Account.builder()
+                .id(UUID.randomUUID())
+                .merchantId(merchantId)
+                .currency("USD")
+                .balance(new BigDecimal("1000.00"))
+                .build();
+
+        customerAccount = Account.builder()
+                .id(UUID.randomUUID())
+                .customerId(customerId)
+                .currency("USD")
+                .balance(new BigDecimal("1000.00"))
+                .build();
+
+        merchant = Merchant.builder()
+                .id(merchantId)
+                .build();
+
+        card = Card.builder()
+                .cardNumber(1L)
+                .build();
+
+        customer = Customer.builder()
+                .id(customerId)
+                .firstname("John")
+                .lastname("Doe")
+                .country("US")
+                .build();
+
+        requestDTO = RequestDTO.builder()
+                .merchantId(merchantId)
+                .amount(new BigDecimal("12.00"))
+                .currency("USD")
+                .firstName("John")
+                .lastName("Doe")
+                .country("US")
+                .cardNumber(1L)
+                .paymentMethod("CARD")
+                .build();
+    }
+
+    @Test
+    void createTransaction() {
+        Mockito.when(merchantService.findById(any(UUID.class)))
+                .thenReturn(Mono.just(merchant));
+
+        Mockito.when(accountService.findByMerchantIdAndCurrency(any(UUID.class), any(String.class)))
+                .thenReturn(Mono.just(merchantAccount));
+
+        Mockito.when(customerService.findByFirstnameAndLastnameAndCountry(any(String.class), any(String.class),
+                        any(String.class)))
+                .thenReturn(Mono.just(customer));
+
+        Mockito.when(accountService.findByCustomerIdAndCurrency(any(UUID.class), any(String.class)))
+                .thenReturn(Mono.just(customerAccount));
+
+        Mockito.when(cardService.findByCardNumber(any(Long.class)))
+                .thenReturn(Mono.just(card));
+
+        Mockito.when(transactionRepository.save(any(Transaction.class)))
+                .thenReturn(Mono.just(transaction));
+
+        Mockito.when(webhookService.sendNotification(any(Transaction.class)))
+                .thenReturn(Mono.empty());
+
+        Mockito.when(accountService.update(any(Account.class)))
+                .thenReturn(Mono.just(new Account()));
+
+        Mono<Transaction> transactionMono = transactionService.createTransaction(requestDTO);
+
+        StepVerifier.create(transactionMono)
+                .expectNext(transaction)
+                .verifyComplete();
+
+        Mockito.verify(merchantService, Mockito.times(1))
+                .findById(any(UUID.class));
+
+        Mockito.verify(accountService, Mockito.times(1))
+                .findByMerchantIdAndCurrency(any(UUID.class), any(String.class));
+
+        Mockito.verify(customerService, Mockito.times(1))
+                .findByFirstnameAndLastnameAndCountry(any(String.class), any(String.class), any(String.class));
+
+        Mockito.verify(accountService, Mockito.times(1))
+                .findByCustomerIdAndCurrency(any(UUID.class), any(String.class));
+
+        Mockito.verify(cardService, Mockito.times(1))
+                .findByCardNumber(any(Long.class));
+
+        Mockito.verify(transactionRepository, Mockito.times(1))
+                .save(any(Transaction.class));
+
+        Mockito.verify(webhookService, Mockito.times(1))
+                .sendNotification(any(Transaction.class));
+
+        Mockito.verify(accountService, Mockito.times(2))
+                .update(any(Account.class));
+
+    }
+
+    @Test
+    void updateTransactionStatus() {
+    }
+
+    @Test
+    void getTransactionsByCreatedAtBetween() {
+
+    }
+
+    @Test
+    void getTransactionDetails() {
+        Mockito.when(transactionRepository.findById(transactionId))
+                .thenReturn(Mono.just(transaction));
+
+        Mono<Transaction> transactionMono = transactionService.getTransactionDetails(transactionId);
+
+        StepVerifier.create(transactionMono)
+                .expectNext(transaction)
+                .verifyComplete();
+
+        Mockito.verify(transactionRepository, Mockito.times(1)).findById(transactionId);
+    }
+
+}

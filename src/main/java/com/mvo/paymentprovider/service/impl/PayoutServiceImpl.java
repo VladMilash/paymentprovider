@@ -131,7 +131,7 @@ public class PayoutServiceImpl implements PayoutService {
                             .flatMap(updatedCustomerAccount -> {
                                 Transaction transaction = createTransactionRecord(updatedCustomerAccount,
                                         updatedMerchantAccount, requestDTO);
-                                return transactionRepository.save(transaction);
+                                return Mono.just(transaction);
                             });
                 });
     }

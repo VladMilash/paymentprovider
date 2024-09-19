@@ -138,7 +138,7 @@ public class TransactionServiceImpl implements TransactionService {
                     return accountService.update(merchantAccount)
                             .flatMap(updatedMerchantAccount -> {
                                 Transaction transaction = createTransactionRecord(updatedCustomerAccount, updatedMerchantAccount, requestDTO);
-                                return transactionRepository.save(transaction);
+                                return Mono.just(transaction);
                             });
                 });
     }
