@@ -1,5 +1,7 @@
 package com.mvo.paymentprovider.errorhandling;
 
+import com.mvo.paymentprovider.exception.ApiException;
+import com.mvo.paymentprovider.exception.NotFoundEntityException;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.http.HttpStatus;
@@ -31,6 +33,12 @@ public class AppErrorAttributes extends DefaultErrorAttributes {
         } else if (error instanceof org.springframework.web.server.ResponseStatusException responseStatusException) {
             status = HttpStatus.valueOf(responseStatusException.getStatusCode().value());
             errorList.add(createErrorMap(status.name(), responseStatusException.getReason()));
+        } else if (error instanceof NotFoundEntityException notFoundEntityException) {
+            status = HttpStatus.NOT_FOUND;
+            errorList.add(createErrorMap(notFoundEntityException.getErrorCode(), notFoundEntityException.getMessage()));
+        } else if (error instanceof ApiException apiException) {
+            status = HttpStatus.BAD_REQUEST;
+            errorList.add(createErrorMap(apiException.getErrorCode(), apiException.getMessage()));
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             var message = error.getMessage();

@@ -17,8 +17,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Mono<Customer> findByFirstnameAndLastnameAndCountry(String firstName, String lastName, String country) {
         return customerRepository.findByFirstnameAndLastnameAndCountry(firstName, lastName, country)
-                .doOnSuccess(customer -> log.info("Customer with firstname {} and lastname {} and country {} has been finding successfully", firstName, lastName, country))
-                .doOnError(error -> log.error("Failed to find customer with firstname {} and lastname {} and country {}", firstName, lastName, country));
+                .doOnSuccess(customer -> log.info("Customer with firstname {} and lastname {} and country has been found successfully {}", firstName, lastName, country))
+                .doOnError(error -> log.error("Failed to find customer with firstname {} and lastname {} and country {}", firstName, lastName, country))
+                .switchIfEmpty(Mono.empty());
     }
 
     @Override

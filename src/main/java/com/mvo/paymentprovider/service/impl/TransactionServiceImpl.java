@@ -2,6 +2,7 @@ package com.mvo.paymentprovider.service.impl;
 
 import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
+import com.mvo.paymentprovider.exception.NotFoundEntityException;
 import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.*;
 import com.mvo.paymentprovider.service.*;
@@ -34,9 +35,9 @@ public class TransactionServiceImpl implements TransactionService {
                 requestDTO.getPaymentMethod(), requestDTO.getAmount(), requestDTO.getCurrency(), requestDTO.getMerchantId());
 
         return merchantService.findById(requestDTO.getMerchantId())
-                .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
+                .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant is not found", "NOT_FOUND_MERCHANT")))
                 .flatMap(merchant -> accountService.findByMerchantIdAndCurrency(requestDTO.getMerchantId(), requestDTO.getCurrency())
-                        .switchIfEmpty(Mono.error(new RuntimeException("Merchant account not found")))
+                        .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
                         .flatMap(merchantAccount -> {
                             log.info("Merchant account for merchantId {} and currency {} found",
                                     requestDTO.getMerchantId(), requestDTO.getCurrency());
@@ -112,6 +113,7 @@ public class TransactionServiceImpl implements TransactionService {
         LocalDateTime end = endDate.atTime(23, 59, 59);
 
         return accountService.findByMerchantId(merchantID)
+                .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
                 .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
                                 operationType, account.getMerchantId())
                         .doOnNext(transaction -> log.info("Transactions by period {} {} have been found successfully",

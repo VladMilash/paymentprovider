@@ -27,7 +27,8 @@ public class CardServiceImpl implements CardService {
     public Mono<Card> findByCardNumber(Long cardNumber) {
         return cardRepository.findByCardNumber(cardNumber)
                 .doOnSuccess(card -> log.info("Card with cardNumber {} has been finding successfully", cardNumber))
-                .doOnError(error -> log.error("Failed to find account with cardNumber {}", cardNumber));
+                .doOnError(error -> log.error("Failed to find account with cardNumber {}", cardNumber))
+                .switchIfEmpty(Mono.empty());
     }
 }
 

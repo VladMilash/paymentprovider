@@ -21,7 +21,8 @@ public class AccountServiceImpl implements AccountService {
     public Mono<Account> findByMerchantId(UUID merchantId) {
         return accountRepository.findByMerchantId(merchantId)
                 .doOnSuccess(account -> log.info("Account with merchantId {} has been finding successfully", merchantId))
-                .doOnError(error -> log.error("Failed to find account with merchantId {}", merchantId));
+                .doOnError(error -> log.error("Failed to find account with merchantId {}", merchantId))
+                .switchIfEmpty(Mono.empty());
     }
 
     @Override
@@ -34,15 +35,17 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Mono<Account> findByMerchantIdAndCurrency(UUID merchantId, String currency) {
         return accountRepository.findByMerchantIdAndCurrency(merchantId, currency)
-                .doOnSuccess(account -> log.info("Account with merchantId {} and currency {} has been finding successfully", merchantId, currency))
-                .doOnError(error -> log.error("Failed to find account with merchantId {} and currency {}", merchantId, currency));
+                .doOnSuccess(account -> log.info("Account with merchantId {} and currency {} has been found successfully", merchantId, currency))
+                .doOnError(error -> log.error("Failed to find merchants account whit merchant id {}, and currency {} ", merchantId, currency))
+                .switchIfEmpty(Mono.empty());
     }
 
     @Override
     public Mono<Account> findByCustomerIdAndCurrency(UUID customerId, String currency) {
         return accountRepository.findByCustomerIdAndCurrency(customerId, currency)
-                .doOnSuccess(account -> log.info("Account with customerId {} and currency {} has been finding successfully", customerId, currency))
-                .doOnError(error -> log.error("Failed to find account with customerId {} and currency {}", customerId, currency));
+                .doOnSuccess(account -> log.info("Account with customerId {} and currency {} has been found successfully", customerId, currency))
+                .doOnError(error -> log.error("Failed to find customers account whit customer id {}, and currency {} ", customerId, currency))
+                .switchIfEmpty(Mono.empty());
     }
 
     @Override

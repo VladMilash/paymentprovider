@@ -21,6 +21,7 @@ public class MerchantServiceImpl implements MerchantService {
     public Mono<Merchant> findById(UUID merchantID) {
         return merchantRepository.findById(merchantID)
                 .doOnSuccess(merchant -> log.info("merchant with id {} has been finding successfully", merchant))
-                .doOnError(error -> log.error("Failed to find merchant with id {}", merchantID));
+                .doOnError(error -> log.error("Failed to find merchant with id {}", merchantID))
+                .switchIfEmpty(Mono.empty());
     }
 }

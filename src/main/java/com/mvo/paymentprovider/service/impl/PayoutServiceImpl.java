@@ -2,6 +2,8 @@ package com.mvo.paymentprovider.service.impl;
 
 import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
+import com.mvo.paymentprovider.exception.ApiException;
+import com.mvo.paymentprovider.exception.NotFoundEntityException;
 import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.TransactionRepository;
 import com.mvo.paymentprovider.service.*;
@@ -33,26 +35,26 @@ public class PayoutServiceImpl implements PayoutService {
                 requestDTO.getPaymentMethod(), requestDTO.getAmount(), requestDTO.getCurrency(), requestDTO.getMerchantId());
 
         return merchantService.findById(requestDTO.getMerchantId())
-                .switchIfEmpty(Mono.error(new RuntimeException("Merchant not found")))
+                .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant is not found", "NOT_FOUND_MERCHANT")))
                 .flatMap(merchant -> {
                     log.info("Merchant with id {} found and is active", requestDTO.getMerchantId());
 
                     return accountService.findByMerchantIdAndCurrency(requestDTO.getMerchantId(), requestDTO.getCurrency())
-                            .switchIfEmpty(Mono.error(new RuntimeException("Merchant account not found")))
+                            .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
                             .flatMap(merchantAccount -> {
                                 log.info("Merchant account for merchantId {} and currency {} found",
                                         requestDTO.getMerchantId(), requestDTO.getCurrency());
 
                                 return customerService.findByFirstnameAndLastnameAndCountry(requestDTO.getFirstName(),
                                                 requestDTO.getLastName(), requestDTO.getCountry())
-                                        .switchIfEmpty(Mono.error(new RuntimeException("Customer not found")))
+                                        .switchIfEmpty(Mono.error(new NotFoundEntityException("Customer is not found", "NOT_FOUND_CUSTOMER")))
                                         .flatMap(customer -> {
                                             log.info("Customer with name {} {} found", requestDTO.getFirstName(),
                                                     requestDTO.getLastName());
 
                                             return accountService.findByCustomerIdAndCurrency(customer.getId(),
                                                             requestDTO.getCurrency())
-                                                    .switchIfEmpty(Mono.error(new RuntimeException("Customer account not found")))
+                                                    .switchIfEmpty(Mono.error(new NotFoundEntityException("Customer account is not found", "NOT_FOUND_CUSTOMER_ACCOUNT")))
                                                     .flatMap(customerAccount -> {
                                                         log.info("Customer account for customerId {} and currency {} found",
                                                                 customer.getId(), requestDTO.getCurrency());
@@ -109,6 +111,7 @@ public class PayoutServiceImpl implements PayoutService {
         LocalDateTime end = endDate.atTime(23, 59, 59);
 
         return accountService.findByMerchantId(merchantID)
+                .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
                 .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
                                 operationType, account.getMerchantId())
                         .doOnNext(transaction -> log.info("Payouts by period {} {} have been found successfully",
@@ -120,7 +123,7 @@ public class PayoutServiceImpl implements PayoutService {
 
     private Mono<Transaction> processPayout(Account customerAccount, Account merchantAccount, RequestDTO requestDTO) {
         if (merchantAccount.getBalance().compareTo(requestDTO.getAmount()) < 0) {
-            return Mono.error(new RuntimeException("There are not enough funds in the merchant's account for payment"));
+            return Mono.error(new ApiException("There are not enough funds in the merchant's account for payment", "FROM_MERCHANT_PAYMENTS_ERROR"));
         }
 
         merchantAccount.setBalance(merchantAccount.getBalance().subtract(requestDTO.getAmount()));
