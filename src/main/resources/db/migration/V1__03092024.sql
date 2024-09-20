@@ -3,8 +3,8 @@ CREATE TABLE merchant
     id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name      VARCHAR(50) NOT NULL,
     secretKey VARCHAR(2048),
-    createdAt DATE,
-    updatedAt DATE,
+    createdAt TIMESTAMP,
+    updatedAt TIMESTAMP,
     status    VARCHAR(50)
 );
 
@@ -13,8 +13,8 @@ CREATE TABLE customer
     id        UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     firstname VARCHAR(50),
     lastname  VARCHAR(50),
-    createdAt DATE,
-    updatedAt DATE,
+    createdAt TIMESTAMP,
+    updatedAt TIMESTAMP,
     status    VARCHAR(50),
     country   VARCHAR(50)
 );
@@ -27,8 +27,8 @@ CREATE TABLE account
     ownerType   VARCHAR(50) CHECK (ownerType IN ('customer', 'merchant')),
     currency    VARCHAR(50),
     balance     DECIMAL(18, 2),
-    createdAt   DATE,
-    updatedAt   DATE,
+    createdAt   TIMESTAMP,
+    updatedAt   TIMESTAMP,
     status      VARCHAR(50),
     CONSTRAINT fk_customer FOREIGN KEY (customer_id) REFERENCES customer (id),
     CONSTRAINT fk_merchant FOREIGN KEY (merchant_id) REFERENCES merchant (id),
@@ -45,8 +45,8 @@ CREATE TABLE card
     card_number BIGINT,
     exp_date    VARCHAR(50),
     cvv         VARCHAR(4),
-    createdAt   DATE,
-    updatedAt   DATE,
+    createdAt   TIMESTAMP,
+    updatedAt   TIMESTAMP,
     status      VARCHAR(50),
     CONSTRAINT fk_account FOREIGN KEY (account_id) REFERENCES account (id)
 );
@@ -61,8 +61,8 @@ CREATE TABLE transaction
     status              VARCHAR(50),
     message             VARCHAR(2048),
     notification_url    VARCHAR(2048),
-    createdAt           DATE,
-    updatedAt           DATE,
+    createdAt           TIMESTAMP,
+    updatedAt           TIMESTAMP,
     language            VARCHAR(50),
     operation_type      VARCHAR(50),
     paymentMethod       VARCHAR(50),
@@ -78,8 +78,8 @@ CREATE TABLE webhook
     status            VARCHAR(50),
     attempts          INTEGER,
     last_attempt_time TIMESTAMP,
-    createdAt         DATE,
-    updatedAt         DATE,
+    createdAt         TIMESTAMP,
+    updatedAt         TIMESTAMP ,
     response_status   VARCHAR(50),
     CONSTRAINT fk_transaction FOREIGN KEY (transaction_id) REFERENCES transaction (id)
 );
