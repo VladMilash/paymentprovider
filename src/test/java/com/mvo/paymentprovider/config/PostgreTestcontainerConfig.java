@@ -12,5 +12,6 @@ public class PostgreTestcontainerConfig {
     @ServiceConnection
     public PostgreSQLContainer<?> postgreSQLContainer() {
         return new PostgreSQLContainer<>("postgres:latest");
+
     }
 }
