@@ -13,7 +13,6 @@ import reactor.test.StepVerifier;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -30,7 +29,6 @@ public class ItTransactionRestControllerV1Test {
     @Test
     public void testCustomerCreation() {
         Customer testCustomer = Customer.builder()
-                .id(UUID.randomUUID())
                 .firstname("John")
                 .lastname("Doe")
                 .createdAt(LocalDateTime.now())

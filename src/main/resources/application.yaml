@@ -2,7 +2,7 @@ server:
   port: 8083
 spring:
   r2dbc:
-    url: r2dbc:postgresql://localhost/payments
+    url: r2dbc:postgresql://localhost:5432/payments
     username: postgres
     password: 4
   flyway:
