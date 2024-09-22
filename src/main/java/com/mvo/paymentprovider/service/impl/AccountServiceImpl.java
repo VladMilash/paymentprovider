@@ -56,7 +56,7 @@ public class AccountServiceImpl implements AccountService {
                     account1.setUpdatedAt(LocalDateTime.now());
                     account1.setOwnerType(account.getOwnerType());
                     account1.setCurrency(account.getCurrency());
-                    account1.setCards(account.getCards());
+//                    account1.setCards(account.getCards());
                     account1.setBalance(account.getBalance());
                     account1.setMerchantId(account.getMerchantId());
                     account1.setCustomerId(account.getCustomerId());

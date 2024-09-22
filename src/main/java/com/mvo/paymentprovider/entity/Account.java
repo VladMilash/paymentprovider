@@ -46,6 +46,4 @@ public class Account {
     @Column("merchant_id")
     private UUID merchantId;
 
-    private List<Card> cards;
-
 }

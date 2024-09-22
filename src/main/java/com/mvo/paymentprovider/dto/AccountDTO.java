@@ -31,5 +31,4 @@ public class AccountDTO {
     private Status status;
     private UUID customerId;
     private UUID merchantId;
-    private List<Card> cards;
 }
