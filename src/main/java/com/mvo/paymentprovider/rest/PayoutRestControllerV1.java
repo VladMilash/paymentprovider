@@ -3,7 +3,6 @@ package com.mvo.paymentprovider.rest;
 import com.mvo.paymentprovider.dto.*;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.mapper.CustomTransactionMapper;
-import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.PayoutService;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -45,11 +44,11 @@ public class PayoutRestControllerV1 {
         LocalDate end;
 
         if (startDate == null || endDate == null) {
-            start = LocalDate.now();
-            end = LocalDate.now();
+            start = LocalDate.now(ZoneOffset.UTC);
+            end = LocalDate.now(ZoneOffset.UTC);
         } else {
-            start = Instant.ofEpochSecond(startDate).atZone(ZoneId.systemDefault()).toLocalDate();
-            end = Instant.ofEpochSecond(endDate).atZone(ZoneId.systemDefault()).toLocalDate();
+            start = Instant.ofEpochSecond(startDate).atZone(ZoneOffset.UTC).toLocalDate();
+            end = Instant.ofEpochSecond(endDate).atZone(ZoneOffset.UTC).toLocalDate();
         }
 
         return payoutService.getPayoutsByCreatedAtBetween(start, end, merchantDetails.getMerchant().getId())
@@ -57,7 +56,7 @@ public class PayoutRestControllerV1 {
     }
 
     @GetMapping("/{payoutId}")
-    public Mono<TransactionDTO> getTransactionDetails(@PathVariable("payoutId") UUID id) {
+    public Mono<TransactionDTO> getPayoutDetails(@PathVariable("payoutId") UUID id) {
         return payoutService.getPayoutDetails(id)
                 .map(transactionMapper::map);
     }

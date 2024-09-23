@@ -138,7 +138,7 @@ class PayoutRestControllerV1Test {
         Mockito.when(transactionMapper.map(transaction))
                 .thenReturn(transactionDTO);
 
-        Mono<TransactionDTO> result = controller.getTransactionDetails(transactionId);
+        Mono<TransactionDTO> result = controller.getPayoutDetails(transactionId);
 
         StepVerifier.create(result)
                 .expectNext(transactionDTO)

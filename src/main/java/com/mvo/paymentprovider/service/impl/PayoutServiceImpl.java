@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Slf4j
@@ -107,8 +109,9 @@ public class PayoutServiceImpl implements PayoutService {
     public Flux<Transaction> getPayoutsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, UUID merchantID) {
 
         OperationType operationType = OperationType.PAYOUT;
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
+        ZoneId zoneId = ZoneId.of("UTC");
+        LocalDateTime start = startDate.atStartOfDay(zoneId).toLocalDateTime();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX).atZone(zoneId).toLocalDateTime();
 
         return accountService.findByMerchantId(merchantID)
                 .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
