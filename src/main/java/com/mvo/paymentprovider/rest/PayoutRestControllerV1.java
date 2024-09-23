@@ -2,6 +2,7 @@ package com.mvo.paymentprovider.rest;
 
 import com.mvo.paymentprovider.dto.*;
 import com.mvo.paymentprovider.entity.Transaction;
+import com.mvo.paymentprovider.mapper.CustomTransactionMapper;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.PayoutService;
@@ -23,7 +24,7 @@ import java.util.UUID;
 @RequestMapping("api/v1/payouts/")
 public class PayoutRestControllerV1 {
     private final PayoutService payoutService;
-    private final TransactionMapper transactionMapper;
+    private final CustomTransactionMapper transactionMapper;
 
     @PostMapping
     public Mono<ResponseEntity<TransactionDTO>> createPayout(@AuthenticationPrincipal MerchantDetails merchantDetails,

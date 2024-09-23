@@ -19,19 +19,26 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.testcontainers.shaded.org.bouncycastle.cert.ocsp.Req;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.util.Base64;
+import java.util.List;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+
 import org.springframework.http.MediaType;
 
 
@@ -53,13 +60,14 @@ public class ItTransactionRestControllerV1Test {
     @Autowired
     private CardRepository cardRepository;
     @Autowired
-    private TransactionService transactionService;
+    private WebhookRepository webhookRepository;
 
     private Merchant testMerchant;
     private Customer testCustomer;
     private Account testMerchantAccount;
     private Account testCustomerAccount;
     private Card testCard;
+    private Transaction testTransaction;
     private String basicAuthHeader;
 
     private static final String TEST_PASSWORD = "1";
@@ -67,10 +75,11 @@ public class ItTransactionRestControllerV1Test {
 
     @BeforeEach
     public void setup() {
+        webhookRepository.deleteAll().block();
+        merchantRepository.deleteAll().block();
         transactionRepository.deleteAll().block();
         cardRepository.deleteAll().block();
         accountRepository.deleteAll().block();
-        merchantRepository.deleteAll().block();
         customerRepository.deleteAll().block();
 
         testMerchant = Merchant.builder()
@@ -132,7 +141,7 @@ public class ItTransactionRestControllerV1Test {
     }
 
     @Test
-    public void testTopUp() {
+    public void testTopUpEndpoint() {
         RequestDTO requestDTO = RequestDTO.builder()
                 .paymentMethod("CARD")
                 .amount(BigDecimal.valueOf(100))
@@ -169,6 +178,145 @@ public class ItTransactionRestControllerV1Test {
                 "Merchant account balance should be 100.00");
         assertEquals(0, BigDecimal.valueOf(900.00).compareTo(updatedCustomerAccount.getBalance()),
                 "Customer account balance should be 900.00");
+
+    }
+
+    @Test
+    public void testTopUpEndpointUnauthorized() {
+        RequestDTO requestDTO = RequestDTO.builder()
+                .paymentMethod("CARD")
+                .amount(BigDecimal.valueOf(100))
+                .currency("USD")
+                .cardNumber(testCard.getCardNumber())
+                .expDate(testCard.getExpDate())
+                .cvv(testCard.getCvv())
+                .language("en")
+                .notificationUrl("http://example.com/notify")
+                .firstName(testCustomer.getFirstname())
+                .lastName(testCustomer.getLastname())
+                .country(testCustomer.getCountry())
+                .build();
+
+        webTestClient.post()
+                .uri("/api/v1/transactions/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(requestDTO)
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+
+    @Test
+    public void testGetTransactions() {
+        LocalDate specificDate = LocalDate.of(2023, 9, 15);
+        LocalDateTime startOfDay = specificDate.atStartOfDay(ZoneOffset.UTC).toLocalDateTime();
+        LocalDateTime endOfDay = specificDate.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC).toLocalDateTime();
+
+        testTransaction = Transaction.builder()
+                .transactionStatus(TransactionStatus.SUCCESS)
+                .message("Test Transaction")
+                .createdAt(startOfDay.plusHours(1))
+                .updatedAt(startOfDay.plusHours(1))
+                .paymentMethod("CARD")
+                .amount(new BigDecimal(100))
+                .operationType(OperationType.TOP_UP)
+                .notificationUrl("test")
+                .merchantAccountId(testMerchantAccount.getId())
+                .currency("USD")
+                .language("Eng")
+                .build();
+        testTransaction = transactionRepository.save(testTransaction).block();
+        System.out.println("Test transaction created at: " + testTransaction.getCreatedAt());
+
+        assertNotNull(testTransaction, "Test transaction should not be null");
+
+
+        List<Transaction> allTransactions = transactionRepository.findAll().collectList().block();
+        if (allTransactions != null) {
+            allTransactions.forEach(transaction ->
+                    System.out.println("Transaction ID: " + transaction.getId() +
+                            ", Created At: " + transaction.getCreatedAt() +
+                            ", Status: " + transaction.getTransactionStatus()));
+        } else {
+            System.out.println("No transactions found in the database.");
+        }
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/transactions/")
+                        .queryParam("start_date", startOfDay.toEpochSecond(ZoneOffset.UTC))
+                        .queryParam("end_date", endOfDay.toEpochSecond(ZoneOffset.UTC))
+                        .build())
+                .header("Authorization", basicAuthHeader)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBodyList(TransactionDTO.class)
+                .value(transactions -> {
+                    assertEquals(1, transactions.size(), "Transactions list should contain 1 transaction");
+                    TransactionDTO dto = transactions.get(0);
+                    assertNotNull(dto.getId(), "Transaction ID should not be null");
+                    assertEquals(TransactionStatus.SUCCESS, dto.getTransactionStatus(), "Transaction status should be SUCCESS");
+                });
+    }
+    @Test
+    public void testTransactionRepositoryGetTransactions() {
+        LocalDate specificDate = LocalDate.of(2023, 9, 15);
+        LocalDateTime startOfDay = specificDate.atStartOfDay(ZoneOffset.UTC).toLocalDateTime();
+        LocalDateTime endOfDay = specificDate.atTime(LocalTime.MAX).atOffset(ZoneOffset.UTC).toLocalDateTime();
+
+        Transaction testTransaction = Transaction.builder()
+                .transactionStatus(TransactionStatus.SUCCESS)
+                .message("Test Transaction")
+                .createdAt(startOfDay.plusHours(1))
+                .updatedAt(startOfDay.plusHours(1))
+                .paymentMethod("CARD")
+                .amount(new BigDecimal(100))
+                .operationType(OperationType.TOP_UP)
+                .notificationUrl("test")
+                .merchantAccountId(testMerchantAccount.getId())
+                .currency("USD")
+                .language("Eng")
+                .build();
+        transactionRepository.save(testTransaction).block();
+
+        Flux<Transaction> transactions = transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(
+                startOfDay,
+                endOfDay,
+                OperationType.TOP_UP,
+                testMerchantAccount.getId()
+        );
+
+        transactions.doOnNext(transaction ->
+                System.out.println("Transaction ID: " + transaction.getId() +
+                        ", Created At: " + transaction.getCreatedAt() +
+                        ", Status: " + transaction.getTransactionStatus())
+        ).blockLast();
+
+        List<Transaction> transactionList = transactions.collectList().block();
+        assertNotNull(transactionList, "Transaction list should not be null");
+        assertEquals(1, transactionList.size(), "Transaction list should contain 1 transaction");
+
+        Transaction foundTransaction = transactionList.get(0);
+        assertNotNull(foundTransaction.getId(), "Transaction ID should not be null");
+        assertEquals(TransactionStatus.SUCCESS, foundTransaction.getTransactionStatus(), "Transaction status should be SUCCESS");
+    }
+
+
+
+    @Test
+    public void testGetTransactionDetails() {
+        webTestClient.get()
+                .uri("/api/v1/transactions/" + testTransaction.getId().toString())
+                .header("Authorization", basicAuthHeader)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(TransactionDTO.class)
+                .value(responseBody -> {
+                    System.out.println("Response Body: " + responseBody);
+                    assertNotNull(responseBody.getId());
+                    assertNotNull(responseBody.getTransactionStatus());
+                    assertEquals("Ok", responseBody.getMessage());
+                });
 
     }
 

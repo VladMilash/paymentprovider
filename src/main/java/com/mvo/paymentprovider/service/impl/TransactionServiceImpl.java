@@ -15,6 +15,8 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.UUID;
 
 @Slf4j
@@ -109,19 +111,27 @@ public class TransactionServiceImpl implements TransactionService {
     public Flux<Transaction> getTransactionsByCreatedAtBetween(LocalDate startDate, LocalDate endDate, UUID merchantID) {
 
         OperationType operationType = OperationType.TOP_UP;
-        LocalDateTime start = startDate.atStartOfDay();
-        LocalDateTime end = endDate.atTime(23, 59, 59);
+        ZoneId zoneId = ZoneId.of("UTC");
+        LocalDateTime start = startDate.atStartOfDay(zoneId).toLocalDateTime();
+        LocalDateTime end = endDate.atTime(LocalTime.MAX).atZone(zoneId).toLocalDateTime();
+
+        log.info("Retrieving transactions for Merchant ID: {}", merchantID);
+        log.info("Searching transactions between {} and {}", start, end);
 
         return accountService.findByMerchantId(merchantID)
+                .doOnSubscribe(subscription -> log.info("Attempting to find account for Merchant ID: {}", merchantID))
                 .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
-                .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
-                                operationType, account.getMerchantId())
-                        .doOnNext(transaction -> log.info("Transactions by period {} {} have been found successfully",
-                                startDate, endDate))
-                        .doOnError(error -> log.error("Failed to find transactions by period {} {}",
-                                startDate, endDate, error))
-                );
+                .flatMapMany(account -> {
+                    log.info("Found account: {}", account);
+                    return transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
+                                    operationType, account.getId())
+                            .doOnNext(transaction -> log.info("Transaction found: {}", transaction))
+                            .doOnComplete(() -> log.info("Completed fetching transactions for Merchant ID: {}", merchantID))
+                            .doOnError(error -> log.error("Error fetching transactions for Merchant ID: {}. Error: {}", merchantID, error));
+                })
+                .doOnError(error -> log.error("Failed to find transactions for Merchant ID: {}. Error: {}", merchantID, error));
     }
+
 
 
     @Override

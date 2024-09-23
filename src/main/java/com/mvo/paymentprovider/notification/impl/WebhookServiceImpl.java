@@ -2,6 +2,7 @@ package com.mvo.paymentprovider.notification.impl;
 
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.Webhook;
+import com.mvo.paymentprovider.mapper.CustomTransactionMapper;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.notification.WebhookService;
 import com.mvo.paymentprovider.repository.WebhookRepository;
@@ -22,7 +23,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class WebhookServiceImpl implements WebhookService {
     private final WebhookRepository webhookRepository;
-    private final TransactionMapper transactionMapper;
+    private final CustomTransactionMapper transactionMapper;
     private final WebClient webClient;
     private final int MAX_ATTEMPTS = 3;
     private final int DURATION_OF_PAUSES_BETWEEN_ATTEMPTS = 5;
