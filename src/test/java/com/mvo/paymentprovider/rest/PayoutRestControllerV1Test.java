@@ -5,6 +5,8 @@ import com.mvo.paymentprovider.dto.TransactionDTO;
 import com.mvo.paymentprovider.entity.Merchant;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
+import com.mvo.paymentprovider.mapper.CustomTransactionMapper;
+import com.mvo.paymentprovider.mapper.CustomerMapper;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.PayoutService;
@@ -36,7 +38,7 @@ class PayoutRestControllerV1Test {
     private PayoutService payoutService;
 
     @Mock
-    private TransactionMapper transactionMapper;
+    private CustomTransactionMapper transactionMapper;
 
     @InjectMocks
     private PayoutRestControllerV1 controller;
@@ -47,30 +49,14 @@ class PayoutRestControllerV1Test {
     private RequestDTO requestDTO;
     private Merchant merchant;
 
-    UUID merchantId;
-    UUID transactionId;
-
     @BeforeEach
     void setUp() {
-        merchantId = UUID.randomUUID();
-        transactionId = UUID.randomUUID();
         String secretKey = "1212";
-//
-//        merchant = Merchant.builder()
-//                .id(merchantId)
-//                .secretKey(secretKey)
-//                .build();
 
         merchant = DataUtils.getPersistedMerchant();
         merchant.setSecretKey(secretKey);
 
         merchantDetails = new MerchantDetails(merchant);
-
-//        transaction = Transaction.builder()
-//                .id(transactionId)
-//                .transactionStatus(TransactionStatus.SUCCESS)
-//                .message("Ok")
-//                .build();
 
         transaction = DataUtils.getPersistedTransactionPayout();
         transaction.setTransactionStatus(TransactionStatus.SUCCESS);
@@ -83,7 +69,7 @@ class PayoutRestControllerV1Test {
                 .build();
 
         requestDTO = RequestDTO.builder()
-                .merchantId(merchantId)
+                .merchantId(merchant.getId())
                 .amount(new BigDecimal("12.00"))
                 .currency("USD")
                 .firstName("John")

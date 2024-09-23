@@ -5,9 +5,10 @@ import com.mvo.paymentprovider.dto.TransactionDTO;
 import com.mvo.paymentprovider.entity.Merchant;
 import com.mvo.paymentprovider.entity.Transaction;
 import com.mvo.paymentprovider.entity.TransactionStatus;
-import com.mvo.paymentprovider.mapper.TransactionMapper;
+import com.mvo.paymentprovider.mapper.CustomTransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.TransactionService;
+import com.mvo.paymentprovider.util.DataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,7 +36,7 @@ class TransactionRestControllerV1Test {
     private TransactionService transactionService;
 
     @Mock
-    private TransactionMapper transactionMapper;
+    private CustomTransactionMapper transactionMapper;
 
     @InjectMocks
     private TransactionRestControllerV1 controller;
@@ -46,36 +47,28 @@ class TransactionRestControllerV1Test {
     private RequestDTO requestDTO;
     private Merchant merchant;
 
-    UUID merchantId;
-    UUID transactionId;
 
     @BeforeEach
     void setUp() {
-        merchantId = UUID.randomUUID();
-        transactionId = UUID.randomUUID();
         String secretKey = "1212";
 
-        merchant = Merchant.builder()
-                .id(merchantId)
-                .secretKey(secretKey)
-                .build();
+        merchant = DataUtils.getPersistedMerchant();
+        merchant.setSecretKey(secretKey);
 
         merchantDetails = new MerchantDetails(merchant);
 
-        transaction = Transaction.builder()
-                .id(transactionId)
-                .transactionStatus(TransactionStatus.SUCCESS)
-                .message("Ok")
-                .build();
+        transaction = DataUtils.getPersistedTransactionPayout();
+        transaction.setTransactionStatus(TransactionStatus.SUCCESS);
+        transaction.setMessage("Ok");
 
         transactionDTO = TransactionDTO.builder()
-                .id(transactionId)
+                .id(transaction.getId())
                 .transactionStatus(TransactionStatus.SUCCESS)
                 .message("Ok")
                 .build();
 
         requestDTO = RequestDTO.builder()
-                .merchantId(merchantId)
+                .merchantId(merchant.getId())
                 .amount(new BigDecimal("12.00"))
                 .currency("USD")
                 .firstName("John")
@@ -133,19 +126,19 @@ class TransactionRestControllerV1Test {
 
     @Test
     void getTransactionDetails() {
-        Mockito.when(transactionService.getTransactionDetails(transactionId))
+        Mockito.when(transactionService.getTransactionDetails(transaction.getId()))
                 .thenReturn(Mono.just(transaction));
 
         Mockito.when(transactionMapper.map(transaction))
                 .thenReturn(transactionDTO);
 
-        Mono<TransactionDTO> result = controller.getTransactionDetails(transactionId);
+        Mono<TransactionDTO> result = controller.getTransactionDetails(transaction.getId());
 
         StepVerifier.create(result)
                 .expectNext(transactionDTO)
                 .verifyComplete();
 
-        verify(transactionService, times(1)).getTransactionDetails(transactionId);
+        verify(transactionService, times(1)).getTransactionDetails(transaction.getId());
         verify(transactionMapper, times(1)).map(transaction);
     }
 }
