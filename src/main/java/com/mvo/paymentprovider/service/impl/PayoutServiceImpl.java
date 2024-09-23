@@ -113,7 +113,7 @@ public class PayoutServiceImpl implements PayoutService {
         return accountService.findByMerchantId(merchantID)
                 .switchIfEmpty(Mono.error(new NotFoundEntityException("Merchant account is not found", "NOT_FOUND_MERCHANT_ACCOUNT")))
                 .flatMapMany(account -> transactionRepository.getTransactionsByCreatedAtBetweenAndOperationTypeAndMerchantAccountId(start, end,
-                                operationType, account.getMerchantId())
+                                operationType, account.getId())
                         .doOnNext(transaction -> log.info("Payouts by period {} {} have been found successfully",
                                 startDate, endDate))
                         .doOnError(error -> log.error("Failed to find Payouts by period {} {}",
