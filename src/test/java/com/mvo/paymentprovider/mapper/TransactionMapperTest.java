@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class TransactionMapperTest {
     private Transaction testTransaction;
-    private TransactionMapper transactionMapper = new TransactionMapperImpl();
+    private TransactionMapper transactionMapper = new CustomTransactionMapper();
 
 
     @BeforeEach

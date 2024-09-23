@@ -5,6 +5,7 @@ import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.dto.TransactionDTO;
 import com.mvo.paymentprovider.entity.*;
 import com.mvo.paymentprovider.repository.*;
+import com.mvo.paymentprovider.util.DataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
-import reactor.core.publisher.Flux;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import java.math.BigDecimal;
@@ -71,56 +71,25 @@ public class ItPayoutRestControllerV1Test {
         transactionRepository.deleteAll().block();
         customerRepository.deleteAll().block();
 
-        testMerchant = Merchant.builder()
-                .name("MerchantTest")
-                .secretKey(Base64.getEncoder().encodeToString(TEST_PASSWORD.getBytes()))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .status(Status.ACTIVE)
-                .build();
+        testMerchant = DataUtils.getTransientMerchant();
         testMerchant = merchantRepository.save(testMerchant).block();
 
-        testCustomer = Customer.builder()
-                .firstname("John")
-                .lastname("Doe")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .status(Status.ACTIVE)
-                .country("USA")
-                .build();
+        testCustomer = DataUtils.getTransientCustomer();
         testCustomer = customerRepository.save(testCustomer).block();
 
-        testMerchantAccount = Account.builder()
-                .merchantId(testMerchant.getId())
-                .ownerType("merchant")
-                .currency("USD")
-                .balance(BigDecimal.valueOf(100))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .status(Status.ACTIVE)
-                .build();
+        testMerchantAccount = DataUtils.getTransientAccountWithoutBalanceAndOwnerTypeAndOwnerId();
+        testMerchantAccount.setMerchantId(testMerchant.getId());
+        testMerchantAccount.setBalance(BigDecimal.valueOf(100));
+        testMerchantAccount.setOwnerType("merchant");
         testMerchantAccount = accountRepository.save(testMerchantAccount).block();
 
-        testCustomerAccount = Account.builder()
-                .customerId(testCustomer.getId())
-                .ownerType("customer")
-                .currency("USD")
-                .balance(BigDecimal.valueOf(0))
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .status(Status.ACTIVE)
-                .build();
+        testCustomerAccount = DataUtils.getTransientAccountWithoutBalanceAndOwnerTypeAndOwnerId();
+        testCustomerAccount.setCustomerId(testCustomer.getId());
+        testCustomerAccount.setBalance(BigDecimal.valueOf(0));
+        testCustomerAccount.setOwnerType("customer");
         testCustomerAccount = accountRepository.save(testCustomerAccount).block();
 
-        testCard = Card.builder()
-                .accountId(testCustomerAccount.getId())
-                .cardNumber(1234567890123456L)
-                .expDate("12/25")
-                .cvv("123")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .status(Status.ACTIVE)
-                .build();
+        testCard = DataUtils.getTransientCard();
         testCard = cardRepository.save(testCard).block();
 
         String auth = testMerchant.getId() + ":" + TEST_PASSWORD;
