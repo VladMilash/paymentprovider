@@ -8,6 +8,7 @@ import com.mvo.paymentprovider.service.AccountService;
 import com.mvo.paymentprovider.service.CardService;
 import com.mvo.paymentprovider.service.CustomerService;
 import com.mvo.paymentprovider.service.MerchantService;
+import com.mvo.paymentprovider.util.DataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,48 +57,27 @@ class TransactionServiceImplTest {
     private Card card;
     private RequestDTO requestDTO;
 
-
-    private final UUID transactionId = UUID.fromString("12122122-212b-4077-af84-694a0e69b8e1");
-    private final UUID merchantId = UUID.fromString("22222222-212b-4077-af84-694a0e69b8e1");
-    private final UUID customerId = UUID.fromString("33333333-212b-4077-af84-694a0e69b8e1");
-
     @BeforeEach
     void setUp() {
-        transaction = Transaction.builder()
-                .id(transactionId)
-                .build();
+        merchant = DataUtils.getPersistedMerchant();
 
-        merchantAccount = Account.builder()
-                .id(UUID.randomUUID())
-                .merchantId(merchantId)
-                .currency("USD")
-                .balance(new BigDecimal("1000.00"))
-                .build();
+        customer = DataUtils.getPersistedCustomer();
 
-        customerAccount = Account.builder()
-                .id(UUID.randomUUID())
-                .customerId(customerId)
-                .currency("USD")
-                .balance(new BigDecimal("1000.00"))
-                .build();
+        transaction = DataUtils.getPersistedTransactionTopUp();
 
-        merchant = Merchant.builder()
-                .id(merchantId)
-                .build();
+        card = DataUtils.getPersistedCard();
 
-        card = Card.builder()
-                .cardNumber(1L)
-                .build();
+        merchantAccount = DataUtils.getPersistedAccount();
+        merchantAccount.setBalance(new BigDecimal("1000.00"));
+        merchantAccount.setMerchantId(merchant.getId());
 
-        customer = Customer.builder()
-                .id(customerId)
-                .firstname("John")
-                .lastname("Doe")
-                .country("US")
-                .build();
+        customerAccount = DataUtils.getPersistedAccount();
+        customerAccount.setCustomerId(customer.getId());
+        customerAccount.setBalance(new BigDecimal("1000.00"));
+
 
         requestDTO = RequestDTO.builder()
-                .merchantId(merchantId)
+                .merchantId(merchant.getId())
                 .amount(new BigDecimal("12.00"))
                 .currency("USD")
                 .firstName("John")
@@ -182,7 +162,7 @@ class TransactionServiceImplTest {
                         any(LocalDateTime.class), any(LocalDateTime.class), any(OperationType.class), any(UUID.class)))
                 .thenReturn(Flux.fromIterable(transactions));
 
-        StepVerifier.create(transactionService.getTransactionsByCreatedAtBetween(startDate, endDate, merchantId))
+        StepVerifier.create(transactionService.getTransactionsByCreatedAtBetween(startDate, endDate, merchant.getId()))
                 .expectNextMatches(returnedTransaction ->
                         returnedTransaction.getId().equals(transaction.getId())
                 )
@@ -195,16 +175,16 @@ class TransactionServiceImplTest {
 
     @Test
     void getTransactionDetails() {
-        Mockito.when(transactionRepository.findById(transactionId))
+        Mockito.when(transactionRepository.findById(transaction.getId()))
                 .thenReturn(Mono.just(transaction));
 
-        Mono<Transaction> transactionMono = transactionService.getTransactionDetails(transactionId);
+        Mono<Transaction> transactionMono = transactionService.getTransactionDetails(transaction.getId());
 
         StepVerifier.create(transactionMono)
                 .expectNext(transaction)
                 .verifyComplete();
 
-        Mockito.verify(transactionRepository, Mockito.times(1)).findById(transactionId);
+        Mockito.verify(transactionRepository, Mockito.times(1)).findById(transaction.getId());
     }
 
 }

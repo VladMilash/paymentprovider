@@ -1,11 +1,10 @@
 package com.mvo.paymentprovider.util;
 
-import com.mvo.paymentprovider.dto.RequestDTO;
 import com.mvo.paymentprovider.entity.*;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.UUID;
 
 public class DataUtils {
     private static final String TEST_PASSWORD = "1";
@@ -51,4 +50,45 @@ public class DataUtils {
                 .build();
     }
 
+    public static Transaction getPersistedTransactionPayout() {
+        return Transaction.builder()
+                .id(UUID.randomUUID())
+                .operationType(OperationType.PAYOUT)
+                .build();
+    }
+
+    public static Transaction getPersistedTransactionTopUp() {
+        return Transaction.builder()
+                .id(UUID.randomUUID())
+                .operationType(OperationType.TOP_UP)
+                .build();
+    }
+
+    public static Account getPersistedAccount() {
+        return Account.builder()
+                .id(UUID.randomUUID())
+                .currency("USD")
+                .build();
+    }
+
+    public static Merchant getPersistedMerchant() {
+        return Merchant.builder()
+                .id(UUID.randomUUID())
+                .build();
+    }
+
+    public static Customer getPersistedCustomer() {
+        return Customer.builder()
+                .id(UUID.randomUUID())
+                .firstname("John")
+                .lastname("Doe")
+                .country("US")
+                .build();
+    }
+
+    public static Card getPersistedCard() {
+        return Card.builder()
+                .cardNumber(1L)
+                .build();
+    }
 }

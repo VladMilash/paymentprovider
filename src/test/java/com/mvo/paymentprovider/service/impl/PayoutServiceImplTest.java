@@ -7,6 +7,7 @@ import com.mvo.paymentprovider.repository.TransactionRepository;
 import com.mvo.paymentprovider.service.AccountService;
 import com.mvo.paymentprovider.service.CustomerService;
 import com.mvo.paymentprovider.service.MerchantService;
+import com.mvo.paymentprovider.util.DataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,44 +52,25 @@ class PayoutServiceImplTest {
     private Customer customer;
     private RequestDTO requestDTO;
 
-    private final UUID transactionId = UUID.fromString("12122122-212b-4077-af84-694a0e69b8e1");
-    private final UUID merchantId = UUID.fromString("22222222-212b-4077-af84-694a0e69b8e1");
-    private final UUID customerId = UUID.fromString("33333333-212b-4077-af84-694a0e69b8e1");
 
     @BeforeEach
     void setUp() {
-        transaction = Transaction.builder()
-                .id(transactionId)
-                .operationType(OperationType.PAYOUT)
-                .build();
+        merchant = DataUtils.getPersistedMerchant();
 
-        merchantAccount = Account.builder()
-                .id(UUID.randomUUID())
-                .merchantId(merchantId)
-                .currency("USD")
-                .balance(new BigDecimal("1000.00"))
-                .build();
+        customer = DataUtils.getPersistedCustomer();
 
-        customerAccount = Account.builder()
-                .id(UUID.randomUUID())
-                .customerId(customerId)
-                .currency("USD")
-                .balance(new BigDecimal("100.00"))
-                .build();
+        transaction = DataUtils.getPersistedTransactionPayout();
 
-        merchant = Merchant.builder()
-                .id(merchantId)
-                .build();
+        merchantAccount = DataUtils.getPersistedAccount();
+        merchantAccount.setBalance(new BigDecimal("1000.00"));
+        merchantAccount.setMerchantId(merchant.getId());
 
-        customer = Customer.builder()
-                .id(customerId)
-                .firstname("John")
-                .lastname("Doe")
-                .country("US")
-                .build();
+        customerAccount = DataUtils.getPersistedAccount();
+        customerAccount.setCustomerId(customer.getId());
+        customerAccount.setBalance(new BigDecimal("100.00"));
 
         requestDTO = RequestDTO.builder()
-                .merchantId(merchantId)
+                .merchantId(merchant.getId())
                 .amount(new BigDecimal("50.00"))
                 .currency("USD")
                 .firstName("John")
@@ -165,7 +147,7 @@ class PayoutServiceImplTest {
                         any(LocalDateTime.class), any(LocalDateTime.class), any(OperationType.class), any(UUID.class)))
                 .thenReturn(Flux.fromIterable(transactions));
 
-        StepVerifier.create(payoutService.getPayoutsByCreatedAtBetween(startDate, endDate, merchantId))
+        StepVerifier.create(payoutService.getPayoutsByCreatedAtBetween(startDate, endDate, merchant.getId()))
                 .expectNextMatches(returnedTransaction ->
                         returnedTransaction.getId().equals(transaction.getId())
                 )
@@ -179,15 +161,15 @@ class PayoutServiceImplTest {
 
     @Test
     void getPayoutDetails() {
-        Mockito.when(transactionRepository.findById(transactionId))
+        Mockito.when(transactionRepository.findById(transaction.getId()))
                 .thenReturn(Mono.just(transaction));
 
-        Mono<Transaction> transactionMono = payoutService.getPayoutDetails(transactionId);
+        Mono<Transaction> transactionMono = payoutService.getPayoutDetails(transaction.getId());
 
         StepVerifier.create(transactionMono)
                 .expectNext(transaction)
                 .verifyComplete();
 
-        Mockito.verify(transactionRepository, Mockito.times(1)).findById(transactionId);
+        Mockito.verify(transactionRepository, Mockito.times(1)).findById(transaction.getId());
     }
 }

@@ -8,6 +8,7 @@ import com.mvo.paymentprovider.entity.TransactionStatus;
 import com.mvo.paymentprovider.mapper.TransactionMapper;
 import com.mvo.paymentprovider.security.MerchantDetails;
 import com.mvo.paymentprovider.service.PayoutService;
+import com.mvo.paymentprovider.util.DataUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,25 +52,32 @@ class PayoutRestControllerV1Test {
 
     @BeforeEach
     void setUp() {
-       merchantId = UUID.randomUUID();
+        merchantId = UUID.randomUUID();
         transactionId = UUID.randomUUID();
         String secretKey = "1212";
+//
+//        merchant = Merchant.builder()
+//                .id(merchantId)
+//                .secretKey(secretKey)
+//                .build();
 
-        merchant = Merchant.builder()
-                .id(merchantId)
-                .secretKey(secretKey)
-                .build();
+        merchant = DataUtils.getPersistedMerchant();
+        merchant.setSecretKey(secretKey);
 
         merchantDetails = new MerchantDetails(merchant);
 
-        transaction = Transaction.builder()
-                .id(transactionId)
-                .transactionStatus(TransactionStatus.SUCCESS)
-                .message("Ok")
-                .build();
+//        transaction = Transaction.builder()
+//                .id(transactionId)
+//                .transactionStatus(TransactionStatus.SUCCESS)
+//                .message("Ok")
+//                .build();
+
+        transaction = DataUtils.getPersistedTransactionPayout();
+        transaction.setTransactionStatus(TransactionStatus.SUCCESS);
+        transaction.setMessage("Ok");
 
         transactionDTO = TransactionDTO.builder()
-                .id(transactionId)
+                .id(transaction.getId())
                 .transactionStatus(TransactionStatus.SUCCESS)
                 .message("Ok")
                 .build();
@@ -132,19 +140,19 @@ class PayoutRestControllerV1Test {
 
     @Test
     void getPayoutDetails() {
-        Mockito.when(payoutService.getPayoutDetails(transactionId))
+        Mockito.when(payoutService.getPayoutDetails(transaction.getId()))
                 .thenReturn(Mono.just(transaction));
 
         Mockito.when(transactionMapper.map(transaction))
                 .thenReturn(transactionDTO);
 
-        Mono<TransactionDTO> result = controller.getPayoutDetails(transactionId);
+        Mono<TransactionDTO> result = controller.getPayoutDetails(transaction.getId());
 
         StepVerifier.create(result)
                 .expectNext(transactionDTO)
                 .verifyComplete();
 
-        verify(payoutService, times(1)).getPayoutDetails(transactionId);
+        verify(payoutService, times(1)).getPayoutDetails(transaction.getId());
         verify(transactionMapper, times(1)).map(transaction);
     }
 }
