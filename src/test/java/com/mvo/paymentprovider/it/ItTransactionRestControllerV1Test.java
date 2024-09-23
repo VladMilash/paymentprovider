@@ -218,6 +218,41 @@ public class ItTransactionRestControllerV1Test {
                     assertEquals(TransactionStatus.SUCCESS, dto.getTransactionStatus(), "Transaction status should be SUCCESS");
                 });
     }
+
+    @Test
+    public void testGetTransactionDetails() {
+        Transaction testTransaction = Transaction.builder()
+                .transactionStatus(TransactionStatus.SUCCESS)
+                .message("Ok")
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .paymentMethod("CARD")
+                .amount(new BigDecimal(100))
+                .operationType(OperationType.TOP_UP)
+                .notificationUrl("test")
+                .merchantAccountId(testMerchantAccount.getId())
+                .currency("USD")
+                .language("Eng")
+                .build();
+        transactionRepository.save(testTransaction).block();
+
+        webTestClient.get()
+                .uri("/api/v1/transactions/" + testTransaction.getId().toString())
+                .header("Authorization", basicAuthHeader)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(TransactionDTO.class)
+                .value(responseBody -> {
+                    System.out.println("Response Body: " + responseBody);
+                    assertNotNull(responseBody.getId());
+                    assertNotNull(responseBody.getTransactionStatus());
+                    assertEquals("Ok", responseBody.getMessage());
+                });
+    }
+
+
+//    This is an additional test that I did to check if the repository is working correctly.
+//    This was necessary in order to narrow down the search for the cause of the error
     @Test
     public void testTransactionRepositoryGetTransactions() {
         LocalDate specificDate = LocalDate.of(2023, 9, 15);
@@ -259,38 +294,5 @@ public class ItTransactionRestControllerV1Test {
         Transaction foundTransaction = transactionList.getFirst();
         assertNotNull(foundTransaction.getId(), "Transaction ID should not be null");
         assertEquals(TransactionStatus.SUCCESS, foundTransaction.getTransactionStatus(), "Transaction status should be SUCCESS");
-    }
-
-
-
-    @Test
-    public void testGetTransactionDetails() {
-        Transaction testTransaction = Transaction.builder()
-                .transactionStatus(TransactionStatus.SUCCESS)
-                .message("Ok")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .paymentMethod("CARD")
-                .amount(new BigDecimal(100))
-                .operationType(OperationType.TOP_UP)
-                .notificationUrl("test")
-                .merchantAccountId(testMerchantAccount.getId())
-                .currency("USD")
-                .language("Eng")
-                .build();
-        transactionRepository.save(testTransaction).block();
-
-        webTestClient.get()
-                .uri("/api/v1/transactions/" + testTransaction.getId().toString())
-                .header("Authorization", basicAuthHeader)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(TransactionDTO.class)
-                .value(responseBody -> {
-                    System.out.println("Response Body: " + responseBody);
-                    assertNotNull(responseBody.getId());
-                    assertNotNull(responseBody.getTransactionStatus());
-                    assertEquals("Ok", responseBody.getMessage());
-                });
     }
 }
