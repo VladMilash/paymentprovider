@@ -11,10 +11,4 @@ public class PaymentProviderApplication {
     public static void main(String[] args) {
         SpringApplication.run(PaymentProviderApplication.class, args);
     }
-
-    @Bean
-    public WebClient webClient() {
-        return WebClient.create();
-    }
-
 }
